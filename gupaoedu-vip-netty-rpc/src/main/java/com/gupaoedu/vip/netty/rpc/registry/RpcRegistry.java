@@ -41,9 +41,9 @@ public class RpcRegistry {
                              lengthAdjustment：要添加到长度字段值的补偿值
                              initialBytesToStrip：从解码帧中去除的第一个字节数
                              */
-//                            pipeline.addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 4, 0, 4));
+                            pipeline.addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 4, 0, 4));
 //                            //自定义协议编码器
-//                            pipeline.addLast(new LengthFieldPrepender(4));
+                            pipeline.addLast(new LengthFieldPrepender(4));
                             //对象参数类型编码器
                             pipeline.addLast("encoder",new ObjectEncoder());
                             //对象参数类型解码器
