@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 //https://www.jianshu.com/p/adc2de3691c7
+@Deprecated
 @Slf4j
 public class UdpHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 

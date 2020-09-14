@@ -15,6 +15,7 @@ import io.netty.handler.timeout.IdleStateHandler;
 public class UdpServer {
 
     private StateManager stateManager=new StateManager();
+    private PkgManager pkgManager=new PkgManager();
     public void run(int port) throws Exception {
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         try {
@@ -35,7 +36,7 @@ public class UdpServer {
                             ChannelPipeline p = ch.pipeline();
 //                            p.addLast(new StateHandler(stateManager));
 //                            p.addLast(new UdpHandler());
-                            p.addLast(new IMDecoder(stateManager));
+                            p.addLast(new IMDecoder(stateManager,pkgManager));
                             //客户端进行心跳
 //                            p.addLast(new IdleStateHandler(5,0,0));
 //                            p.addLast(new PingPongHandler());

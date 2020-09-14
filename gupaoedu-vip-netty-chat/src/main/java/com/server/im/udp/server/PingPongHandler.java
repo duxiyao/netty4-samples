@@ -9,7 +9,7 @@ import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.CharsetUtil;
 
 import java.net.InetSocketAddress;
-
+@Deprecated
 public class PingPongHandler extends ChannelInboundHandlerAdapter {
 
     @Override
