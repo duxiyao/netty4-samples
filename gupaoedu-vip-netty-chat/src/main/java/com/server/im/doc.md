@@ -7,20 +7,35 @@
 - spring cloud微服务做业务
 
 # 数据交换协议
-[from(1B)][fromid][to(1B)][toid][type(1B)][version(1B)]
-[pkgidlen(1B)][pkgid(utf-8)][pkgcnt(1B)][cpkgn(1B)]
+[fromid(36B utf-8)][toid(36B utf-8)][pkgid(36B utf-8)][type(1B)][version(1B)]
+[pkgcnt(1B)][cpkgn(1B)]
 [datalen(2B)][data]  {data中结构[timestamp8B][jsonlen(2B)][json(utf-8)][字节流]}
-fromid
-toid
+fromid 36个字节 utf-8
+toid 36个字节 utf-8
+pkgid，包id 36个字节 utf-8
 type,1字节数据类型 
 version,1字节版本号 
-pkgid，包id 
 pkgcnt,N个包为完整 
 cpkgn,当前第n个包 
 datalen，2字节数据长度，不包含之前的不包含自身，包含之后的
 
 data,剩余字节流数据，若是媒体数据，需要由时间戳表示媒体包的顺序.timestamp为long的时间戳
 jsonlen, 2字节json长度 json数据 字节流数据
+
+~~、[from(1B)][fromid][to(1B)][toid][type(1B)][version(1B)]~~
+~~[pkgidlen(1B)][pkgid(utf-8)][pkgcnt(1B)][cpkgn(1B)]~~
+~~[datalen(2B)][data]{data中结构[timestamp8B][jsonlen(2B)][json(utf-8)][字节流]}~~
+~~fromid~~
+~~toid~~
+~~type,1字节数据类型 ~~
+~~version,1字节版本号 ~~
+~~pkgid，包id ~~
+~~pkgcnt,N个包为完整 ~~
+~~cpkgn,当前第n个包 ~~
+~~datalen，2字节数据长度，不包含之前的不包含自身，包含之后的~~
+
+~~data,剩余字节流数据，若是媒体数据，需要由时间戳表示媒体包的顺序.timestamp为long的时间戳~~
+~~jsonlen, 2字节json长度 json数据 字节流数据~~
 
 ## 消息
 消息通过relay转发、后续可加上stun进行nat打洞。若A发消息给B，而A、B不在同一relay上，则通过redis获取对应的relay,并通过dubbo中继，过程中若发现不在线，

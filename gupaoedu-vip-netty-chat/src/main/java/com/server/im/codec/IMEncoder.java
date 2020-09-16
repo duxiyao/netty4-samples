@@ -2,43 +2,65 @@ package com.server.im.codec;
 
 import com.server.im.model.PkgInfo;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
+import io.netty.util.CharsetUtil;
 import lombok.extern.slf4j.Slf4j;
+
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 public class IMEncoder {
-    public static ByteBuf encode(ChannelHandlerContext ctx, PkgInfo pkgInfo){
-        String fromId=pkgInfo.getFrom();
-        String toId=pkgInfo.getTo();
-        byte type=pkgInfo.getType();
-        byte version=pkgInfo.getVersion();
-        String pkgId=pkgInfo.getPkgId();
-        byte pkgcnt=pkgInfo.getPkgCnt();
-        byte cpkgn=pkgInfo.getcPkgn();
-        byte[] data=pkgInfo.getData();
 
-        ByteBuf newBuf = ctx.alloc().buffer(1);
-        byte[] from=fromId.getBytes();
-        newBuf.writeByte(from.length);
-        newBuf.writeBytes(from);
-        byte[] to=toId.getBytes();
-        newBuf.writeByte(to.length);
-        newBuf.writeBytes(to);
+    public static final int ID_LEN = 36;
+    public static final String CODE = "utf-8";
+    public static final Charset CODESET = CharsetUtil.UTF_8;
+    public static final int MAX_LEN = 1472;
 
-        newBuf.writeByte(type);
-        newBuf.writeByte(version);
+    public static List<ByteBuf> encode(ChannelHandlerContext ctx, PkgInfo pkgInfo) {
+        List<ByteBuf> ret = new ArrayList<>();
+        int len = pkgInfo.length();
+        int baselen = pkgInfo.baseLength();
 
-        byte[] pkgid=pkgId.getBytes();
-        newBuf.writeByte(pkgid.length);
-        newBuf.writeBytes(pkgid);
+        int datalen = len - baselen;
+        int max = MAX_LEN - baselen;
 
-        newBuf.writeByte(pkgcnt);
-        newBuf.writeByte(cpkgn);
+        int remain = datalen;
+        int n = 1;
+        while (remain > max) {
+            n++;
+            remain = remain - max;
+        }
 
-        newBuf.writeShort(data.length);
-        newBuf.writeBytes(data);
-
-        return newBuf;
+        byte[] data = pkgInfo.getData();
+        ByteBuf bdata = null;
+        if (ctx != null) {
+            bdata = ctx.alloc().buffer(data.length);
+            bdata.writeBytes(data);
+        } else {
+            bdata = Unpooled.wrappedBuffer(data);
+        }
+//        ByteBuffer bdata = ByteBuffer.wrap(data);
+        for (int i = 0; i < n; i++) {
+            int cur = i + 1;
+            int dlen = max;
+            if (i == n - 1) {
+                dlen = bdata.readableBytes();
+            }
+            ByteBuf byteBuffer = null;
+            if (ctx != null) {
+                byteBuffer = ctx.alloc().buffer(pkgInfo.baseLength() + datalen);
+            }
+            ByteBuf buffer = pkgInfo.getBase(byteBuffer, (byte) n, (byte) cur, (short) dlen);
+            byte[] tmp = new byte[dlen];
+            bdata.readBytes(tmp);
+            buffer.writeBytes(tmp);
+            ret.add(buffer);
+        }
+        bdata.release();
+        return ret;
     }
 }

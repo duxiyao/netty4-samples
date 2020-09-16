@@ -9,14 +9,16 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.util.CharsetUtil;
+import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
+import java.nio.charset.Charset;
+import java.util.List;
 
 @Slf4j
 public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
-    public final static String CODE = "utf-8";
     private StateManager stateManager;
     private PkgManager pkgManager;
 
@@ -69,36 +71,29 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
                 log.info("无法发送给目标");
             }
         }
+
+        ReferenceCountUtil.release(msg);
     }
 
     private void transferTo(ChannelHandlerContext ctx, PkgInfo pkgInfo, InetSocketAddress inetSocketAddress) {
-        ByteBuf buf = IMEncoder.encode(ctx, pkgInfo);
-        ctx.writeAndFlush(new DatagramPacket(buf, inetSocketAddress));
-        buf.release();
+        try {
+            List<ByteBuf> bufs = IMEncoder.encode(ctx, pkgInfo);
+            ByteBuf buf = bufs.get(0);
+            ctx.writeAndFlush(new DatagramPacket(buf, inetSocketAddress));
+            buf.release();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
-
     public static PkgInfo decode(ByteBuf byteBuf, PkgManager msgManager) throws UnsupportedEncodingException {
-        byteBuf.clear();
 
-        byte fromlen = byteBuf.readByte();
-        byte[] from = new byte[fromlen];
-        byteBuf.readBytes(from);
-        String fromId = new String(from, CODE);
-
-        byte tolen = byteBuf.readByte();
-        byte[] to = new byte[tolen];
-        byteBuf.readBytes(to);
-        String toId = new String(from, CODE);
+        String fromId=byteBuf.readCharSequence(IMEncoder.ID_LEN, IMEncoder.CODESET).toString();
+        String toId=byteBuf.readCharSequence(IMEncoder.ID_LEN, IMEncoder.CODESET).toString();
+        String pkgId=byteBuf.readCharSequence(IMEncoder.ID_LEN, IMEncoder.CODESET).toString();
 
         byte type = byteBuf.readByte();
         byte version = byteBuf.readByte();
-
-        short pkgidlen = byteBuf.readShort();
-        byte[] pkgid = new byte[pkgidlen];
-        byteBuf.readBytes(pkgid);
-        String pkgId = new String(pkgid, CODE);
-
         byte pkgcnt = byteBuf.readByte();
         byte cpkgn = byteBuf.readByte();
 
@@ -111,9 +106,9 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
         PkgInfo pkgInfo = msgManager.get(pkgId);//客户端需要获取并保持，直到data数据获取完整后进行拼装。服务端只需缓存在内存里，当客户端需要时候给予即可。若是分布式，可考虑存放在redis中
         pkgInfo.setFrom(fromId);
         pkgInfo.setTo(toId);
+        pkgInfo.setPkgId(pkgId);
         pkgInfo.setType(type);
         pkgInfo.setVersion(version);
-        pkgInfo.setPkgId(pkgId);
         pkgInfo.setPkgCnt(pkgcnt);
         pkgInfo.setcPkgn(cpkgn);
         pkgInfo.addData(data);
@@ -121,4 +116,5 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
         msgManager.checkPkg();
         return pkgInfo;
     }
+
 }
