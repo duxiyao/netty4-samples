@@ -17,6 +17,14 @@ public class UdpServer {
     private StateManager stateManager=new StateManager();
     private PkgManager pkgManager=new PkgManager();
     public void run(int port) throws Exception {
+        pkgManager.setPkgInfoConsumer((waitForFinish) -> {
+            if (waitForFinish.send()) {
+
+            } else {
+                pkgManager.removeWaitForFinish(waitForFinish);
+            }
+        });
+
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         try {
             //通过NioDatagramChannel创建Channel，并设置Socket参数支持广播

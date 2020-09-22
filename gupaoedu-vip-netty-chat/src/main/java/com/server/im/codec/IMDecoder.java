@@ -1,20 +1,17 @@
 package com.server.im.codec;
 
 import com.server.im.model.PkgInfo;
+import com.server.im.model.WaitForFinish;
 import com.server.im.udp.server.PkgManager;
 import com.server.im.udp.server.StateManager;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
-import io.netty.util.CharsetUtil;
-import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
-import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -28,15 +25,20 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
     }
 
     @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        cause.printStackTrace();
+    }
+
+    @Override
     protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
 //           parse and add
         InetSocketAddress inetSocketAddress = msg.sender();
 
         ByteBuf byteBuf = msg.content();
-        PkgInfo pkgInfo = decode(byteBuf, pkgManager);
-        byteBuf.release();
+        PkgInfo pkgInfo = PkgManager.decodeOne(byteBuf, pkgManager);
 
         String userId = pkgInfo.getFrom();
+        log.info("receive data of " + userId+" type="+pkgInfo.getType());
 
         // TODO: 2020/9/11 判断是否是本relay服务维护，不是的话需要进行relay转发
         String to = pkgInfo.getTo();
@@ -45,76 +47,122 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
 //            return;
 //        }
 
-        if (!stateManager.contains(inetSocketAddress)) {
-            //维护客户端通讯通道
-            if (userId != null) {
-                stateManager.add(userId, inetSocketAddress);
-            }
-            String req = "【服务器】您好 " + userId + "," + inetSocketAddress.toString();
-            log.info(req);
-            ctx.writeAndFlush(new DatagramPacket(Unpooled.copiedBuffer(req, CharsetUtil.UTF_8), inetSocketAddress));
+        switch (pkgInfo.getType()) {
+            case PkgInfo.TYPE_LOGIN:
+                if (!stateManager.contains(inetSocketAddress)) {
+                    //维护客户端通讯通道
+                    if (userId != null) {
+                        stateManager.add(userId, inetSocketAddress);
+                    }
+                    String req = "【服务器】您好 " + userId + "," + inetSocketAddress.toString();
+                    log.info(req);
+                }
+                break;
+            case PkgInfo.TYPE_OBTAIN:
+                //判断类型，如果是客户端索取丢失的数据包
+                // : 2020/9/14 索取内存
+                //若内存有则回馈客户端；若没有则告诉客户端过期了
+                // : 2020/9/14
+                byte[] pkgns = pkgInfo.getData();
+                for (byte n : pkgns) {
+                    PkgInfo which = pkgManager.get(pkgInfo.getPkgId(), n);
+                    if (which == null) {
+                        writeRemoved(ctx, pkgInfo, inetSocketAddress);
+                        break;
+                    } else {
+                        writeMissing(ctx, which, inetSocketAddress);
+                    }
+                }
+                break;
+            case PkgInfo.TYPE_PKG_RECEIVE_FINISH:
+                pkgManager.removeWaitForFinish(new WaitForFinish(null, ctx, pkgInfo));
+                break;
+            case PkgInfo.TYPE_PKG_REMOVED:
+                pkgManager.remove(pkgInfo.getPkgId());
+                break;
+            case PkgInfo.TYPE_PKG_FINISH:
+                if (pkgManager.get(pkgInfo.getPkgId()) == null) {
+                    if (pkgManager.assemblePkg(pkgInfo.getPkgId())) {
+                        // : 2020/9/21  组装成功 回应
+                        responsePkgAssembled(ctx, pkgInfo, inetSocketAddress);
+                        //转发
+                        InetSocketAddress toAddr = stateManager.get(to);
+                        if (toAddr != null) {
+                            WaitForFinish waitForFinish = new WaitForFinish(toAddr, ctx, pkgInfo);
+                            // : 2020/9/21 需要一直转发PkgInfo.TYPE_PKG_FINISH直到收到 PkgInfo.TYPE_PKG_RECEIVE_FINISH
+                            pkgManager.addWaitForFinish(waitForFinish);
+                        }
+                    } else {
+                        //组装失败
+                        List<Byte> pkgn = pkgManager.getLackPkg(pkgInfo.getPkgId());
+                        if (pkgn != null) {
+                            // : 2020/9/21 像提供者索取
+                            responsePkgObtain(ctx, pkgInfo, inetSocketAddress, pkgn);
+                        } else {
+                            byte total = pkgInfo.getPkgCnt();
+                            List<Byte> ds = new ArrayList<>();
+                            for (byte i = 1; i <= total; i++) {
+                                ds.add(i);
+                            }
+                            responsePkgObtain(ctx, pkgInfo, inetSocketAddress, ds);
+                        }
+                    }
+                }
+                break;
+            case PkgInfo.TYPE_TRANSFER_TXT:
+
+                //转发
+                InetSocketAddress toAddr = stateManager.get(to);
+                if (toAddr != null) {
+                    String req = "【服务器】转发 " + toAddr.toString();
+                    log.info(req);
+                    transferTo(ctx, pkgInfo, toAddr);
+                    pkgManager.addOne(pkgInfo);
+                } else {
+                    log.info("无法发送给目标");
+                }
+                break;
+            default:
+                break;
         }
 
-        //判断类型，如果是客户端索取丢失的数据包
-        // TODO: 2020/9/14 索取内存
-        if (PkgInfo.TYPE_OBTAIN == pkgInfo.getType()) {
-            //若内存有则回馈客户端；若没有则告诉客户端过期了
-            // TODO: 2020/9/14
+//        ReferenceCountUtil.release(msg);
+    }
 
-            pkgManager.remove(pkgInfo.getPkgId());
-        } else {
-            //转发
-            InetSocketAddress toAddr = stateManager.get(to);
-            if (toAddr != null) {
-                transferTo(ctx, pkgInfo, toAddr);
-            } else {
-                log.info("无法发送给目标");
-            }
+    private void writeRemoved(ChannelHandlerContext ctx, PkgInfo pkgInfo, InetSocketAddress inetSocketAddress) {
+        pkgInfo.setType(PkgInfo.TYPE_PKG_REMOVED);
+        transferTo(ctx, pkgInfo, inetSocketAddress);
+    }
+
+    private void writeMissing(ChannelHandlerContext ctx, PkgInfo which, InetSocketAddress inetSocketAddress) {
+        transferTo(ctx, which, inetSocketAddress);
+    }
+
+    private void responsePkgObtain(ChannelHandlerContext ctx, PkgInfo pkgInfo, InetSocketAddress inetSocketAddress, List<Byte> pkgn) {
+        pkgInfo.setType(PkgInfo.TYPE_OBTAIN);
+        byte[] d = new byte[pkgn.size()];
+        for (int i = 0; i < pkgn.size(); i++) {
+            d[i] = pkgn.get(i);
         }
+        pkgInfo.addData(d);
+        transferTo(ctx, pkgInfo, inetSocketAddress);
+    }
 
-        ReferenceCountUtil.release(msg);
+    private void responsePkgAssembled(ChannelHandlerContext ctx, PkgInfo pkgInfo, InetSocketAddress inetSocketAddress) {
+        pkgInfo.setType(PkgInfo.TYPE_PKG_RECEIVE_FINISH);
+        transferTo(ctx, pkgInfo, inetSocketAddress);
     }
 
     private void transferTo(ChannelHandlerContext ctx, PkgInfo pkgInfo, InetSocketAddress inetSocketAddress) {
         try {
-            List<ByteBuf> bufs = IMEncoder.encode(ctx, pkgInfo);
-            ByteBuf buf = bufs.get(0);
-            ctx.writeAndFlush(new DatagramPacket(buf, inetSocketAddress));
-            buf.release();
-        }catch (Exception e){
+            ByteBuf buf = IMEncoder.encodeOne(ctx.channel(), pkgInfo);
+            if (buf != null) {
+                ctx.write(new DatagramPacket(buf, inetSocketAddress));
+            }
+            ctx.flush();
+        } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public static PkgInfo decode(ByteBuf byteBuf, PkgManager msgManager) throws UnsupportedEncodingException {
-
-        String fromId=byteBuf.readCharSequence(IMEncoder.ID_LEN, IMEncoder.CODESET).toString();
-        String toId=byteBuf.readCharSequence(IMEncoder.ID_LEN, IMEncoder.CODESET).toString();
-        String pkgId=byteBuf.readCharSequence(IMEncoder.ID_LEN, IMEncoder.CODESET).toString();
-
-        byte type = byteBuf.readByte();
-        byte version = byteBuf.readByte();
-        byte pkgcnt = byteBuf.readByte();
-        byte cpkgn = byteBuf.readByte();
-
-        short datalen = byteBuf.readShort();
-        byte[] data = new byte[datalen];
-        byteBuf.readBytes(data);
-
-        //解码
-//        Message message = msgManager.get(pkgId);//客户端需要获取并保持，直到data数据获取完整后进行拼装
-        PkgInfo pkgInfo = msgManager.get(pkgId);//客户端需要获取并保持，直到data数据获取完整后进行拼装。服务端只需缓存在内存里，当客户端需要时候给予即可。若是分布式，可考虑存放在redis中
-        pkgInfo.setFrom(fromId);
-        pkgInfo.setTo(toId);
-        pkgInfo.setPkgId(pkgId);
-        pkgInfo.setType(type);
-        pkgInfo.setVersion(version);
-        pkgInfo.setPkgCnt(pkgcnt);
-        pkgInfo.setcPkgn(cpkgn);
-        pkgInfo.addData(data);
-        pkgInfo.setServerReceTime(System.currentTimeMillis());
-        msgManager.checkPkg();
-        return pkgInfo;
     }
 
 }

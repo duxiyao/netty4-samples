@@ -8,9 +8,20 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 public class PkgInfo {
+    public final static byte TYPE_LOGIN = 0;
     public final static byte TYPE_OBTAIN = 1;
+    /**
+     * 每当一系列包发送完后，会发送发送完成标志，然后对方需要进行响应
+     */
+    public final static byte TYPE_PKG_FINISH = 2;
+    /**
+     * 当接收端收到TYPE_PKG_FINISH，检测该系列包是否完整，不完整则进行索取TYPE_OBTAIN，完整则回应TYPE_PKG_RECEIVE_FINISH
+     */
+    public final static byte TYPE_PKG_RECEIVE_FINISH = 3;
+    public final static byte TYPE_PKG_REMOVED = 4;
     public final static byte TYPE_TRANSFER_TXT = 11;
     private String from;
     private String to;
@@ -144,5 +155,28 @@ public class PkgInfo {
                 ", serverReceTime=" + serverReceTime +
                 ", data=" + data +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PkgInfo)) return false;
+        PkgInfo pkgInfo = (PkgInfo) o;
+//        return Objects.equals(getFrom(), pkgInfo.getFrom()) &&
+//                Objects.equals(getTo(), pkgInfo.getTo()) &&
+//                Objects.equals(getType(), pkgInfo.getType()) &&
+//                Objects.equals(getVersion(), pkgInfo.getVersion()) &&
+//                Objects.equals(getPkgId(), pkgInfo.getPkgId()) &&
+//                Objects.equals(getPkgCnt(), pkgInfo.getPkgCnt()) &&
+//                Objects.equals(getcPkgn(), pkgInfo.getcPkgn());
+        return
+                Objects.equals(getPkgId(), pkgInfo.getPkgId()) &&
+                Objects.equals(getcPkgn(), pkgInfo.getcPkgn());
+    }
+
+    @Override
+    public int hashCode() {
+//        return Objects.hash(getFrom(), getTo(), getType(), getVersion(), getPkgId(), getPkgCnt(), getcPkgn());
+        return Objects.hash( getPkgId(),getcPkgn());
     }
 }

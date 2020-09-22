@@ -25,6 +25,9 @@ public class StateManager {
 
     public void rm(String userId) {
         InetSocketAddress inetSocketAddress = map.get(userId);
+        if(inetSocketAddress==null){
+            return;
+        }
         String ipinfo = inetSocketAddress.toString();
         set.remove(ipinfo);
         map.remove(userId);
