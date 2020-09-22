@@ -4,6 +4,7 @@ import com.server.im.codec.IMEncoder;
 import com.server.im.codec.MessageUtil;
 import com.server.im.model.PkgInfo;
 import com.server.im.model.WaitForFinish;
+import com.server.im.model.WholePkg;
 import com.server.im.udp.server.PkgManager;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
@@ -17,12 +18,14 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.util.CharsetUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class Test implements Runnable {
     //MessageUnpacker
 //    MessagePack
@@ -56,10 +59,12 @@ public class Test implements Runnable {
                     .handler(new TestHandler(pkgManager));
             Channel ch = b.bind(0).sync().channel();
             //向网段内的所有机器广播
-            String data = "";
-            while (data.getBytes().length <  (1358 * 1 + 0)) {
+            String data = "" + meId + " ";
+//            String data = "";
+            while (data.getBytes().length < (1358 * 1 + 0)) {
                 data = data + "a";
             }
+            data = data + "b";
             System.out.println(data.getBytes().length);
 //            InetSocketAddress to=new InetSocketAddress(
 //                    "255.255.255.255", port);
@@ -75,8 +80,10 @@ public class Test implements Runnable {
             PkgInfo pkgInfo = MessageUtil.buildLoginMsg("");
             pkgInfo.setFrom(meId);
             List<ByteBuf> datas = IMEncoder.encode(ch, pkgInfo);
+            pkgManager.addWholePkg(new WholePkg(datas, pkgInfo));
             for (ByteBuf byteBuf : datas) {
                 ch.write(new DatagramPacket(byteBuf, to));
+                break;
             }
             ch.flush();
 
@@ -85,20 +92,28 @@ public class Test implements Runnable {
             pkgInfo = MessageUtil.buildMsg(toid, data);
             pkgInfo.setFrom(meId);
             datas = IMEncoder.encode(ch, pkgInfo);
+            pkgManager.addWholePkg(new WholePkg(datas, pkgInfo));
+            int i=0;
             for (ByteBuf byteBuf : datas) {
 //                ch.writeAndFlush(new DatagramPacket(byteBuf, to)).sync();
+                i++;
+                if(i==1){
+                    continue;
+                }
                 ch.write(new DatagramPacket(byteBuf, to));
             }
-            // TODO: 2020/9/21 需要一直发送PkgInfo.TYPE_PKG_FINISH直到收到 PkgInfo.TYPE_PKG_RECEIVE_FINISH
             ch.flush();
-            pkgManager.addWaitForFinish(new WaitForFinish(to,ch.pipeline().lastContext(), pkgInfo));
+            // : 2020/9/21 需要一直发送PkgInfo.TYPE_PKG_FINISH直到收到 PkgInfo.TYPE_PKG_RECEIVE_FINISH
             pkgManager.setPkgInfoConsumer((waitForFinish) -> {
                 if (waitForFinish.send()) {
 
+                    log.info("发送 waitForFinish.send()");
                 } else {
+                    log.info("removeWaitForFinish(waitForFinish)");
                     pkgManager.removeWaitForFinish(waitForFinish);
                 }
             });
+            pkgManager.addWaitForFinish(new WaitForFinish(to, ch.pipeline().lastContext(), pkgInfo));
 
             //客户端等待15s用于接收服务端的应答消息，然后退出并释放资源
             if (!ch.closeFuture().await(15000)) {
@@ -129,7 +144,7 @@ public class Test implements Runnable {
 
     private static void test() throws Exception {
 
-        PkgManager pkgManager=new PkgManager();
+        PkgManager pkgManager = new PkgManager();
         String data = "";
         while (data.getBytes().length < (1358 * 2 + 1)) {
             data = data + "ab";

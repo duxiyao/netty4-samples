@@ -4,6 +4,7 @@ import com.server.im.codec.IMEncoder;
 import com.server.im.model.AssemblePkg;
 import com.server.im.model.PkgInfo;
 import com.server.im.model.WaitForFinish;
+import com.server.im.model.WholePkg;
 import io.netty.buffer.ByteBuf;
 
 import java.io.UnsupportedEncodingException;
@@ -15,7 +16,7 @@ import java.util.function.Consumer;
 
 public class PkgManager {
 
-    private final static int MAX_ALIVE = 30;//缓存30秒
+    public final static int MAX_ALIVE = 30;//缓存30秒
     //pkgid+cpkgn,单个pkginfo包
     private Map<String, AssemblePkg> pkgMap = new ConcurrentHashMap();
     private CopyOnWriteArrayList<WaitForFinish> waitfininsh=new CopyOnWriteArrayList<>();
@@ -26,6 +27,7 @@ public class PkgManager {
     );
     private volatile boolean check=true;
     private Consumer<WaitForFinish> pkgInfoConsumer;
+    private Map<String, WholePkg> wholePkgMap = new ConcurrentHashMap();
 
     public PkgManager(){
         checkPkg();
@@ -45,7 +47,6 @@ public class PkgManager {
                         }
                     }
 
-
                     long cur = System.currentTimeMillis();
                     if(cur-checkPkgTime>5000) {
                         Collection<AssemblePkg> collection = pkgMap.values();
@@ -59,8 +60,22 @@ public class PkgManager {
                                 e.printStackTrace();
                             }
                         }
+
+                        Collection<WholePkg>  wholePkgs = wholePkgMap.values();
+                        for (WholePkg wholePkg : wholePkgs) {
+                            try {
+                                long m = wholePkg.getInitTime();
+                                if (cur - m > MAX_ALIVE * 1000) {
+                                    wholePkgMap.remove(wholePkg.getPkgId());
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+
                         checkPkgTime=System.currentTimeMillis();
                     }
+
                     TimeUnit.MILLISECONDS.sleep(20);
                 }catch (Exception e){
                     e.printStackTrace();
@@ -202,5 +217,21 @@ public class PkgManager {
 
     public void setPkgInfoConsumer(Consumer<WaitForFinish> consumer){
         pkgInfoConsumer=consumer;
+    }
+
+    public void addWholePkg(WholePkg wholePkg){
+        wholePkgMap.put(wholePkg.getPkgId(),wholePkg);
+    }
+
+    public ByteBuf getByteBuf(String pkgId,int i){
+        if(wholePkgMap.containsKey(pkgId)){
+            WholePkg wholePkg=wholePkgMap.get(pkgId);
+            return wholePkg.get(i);
+        }
+        return null;
+    }
+
+    public void removeWholePkg(String pkgId){
+        wholePkgMap.remove(pkgId);
     }
 }

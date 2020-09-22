@@ -38,7 +38,7 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
         PkgInfo pkgInfo = PkgManager.decodeOne(byteBuf, pkgManager);
 
         String userId = pkgInfo.getFrom();
-        log.info("receive data of " + userId+" type="+pkgInfo.getType());
+        log.info("receive data of " + userId + " pkgId=" + pkgInfo.getPkgId() + " type=" + pkgInfo.getType());
 
         // TODO: 2020/9/11 判断是否是本relay服务维护，不是的话需要进行relay转发
         String to = pkgInfo.getTo();
@@ -76,13 +76,15 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
                 break;
             case PkgInfo.TYPE_PKG_RECEIVE_FINISH:
                 pkgManager.removeWaitForFinish(new WaitForFinish(null, ctx, pkgInfo));
+                pkgManager.remove(pkgInfo.getPkgId());
                 break;
             case PkgInfo.TYPE_PKG_REMOVED:
                 pkgManager.remove(pkgInfo.getPkgId());
                 break;
             case PkgInfo.TYPE_PKG_FINISH:
-                if (pkgManager.get(pkgInfo.getPkgId()) == null) {
+//                if (pkgManager.get(pkgInfo.getPkgId()) == null) {
                     if (pkgManager.assemblePkg(pkgInfo.getPkgId())) {
+                        log.info(pkgInfo.getPkgId() + " 组装成功");
                         // : 2020/9/21  组装成功 回应
                         responsePkgAssembled(ctx, pkgInfo, inetSocketAddress);
                         //转发
@@ -93,6 +95,7 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
                             pkgManager.addWaitForFinish(waitForFinish);
                         }
                     } else {
+                        log.info(pkgInfo.getPkgId() + " 组装失败");
                         //组装失败
                         List<Byte> pkgn = pkgManager.getLackPkg(pkgInfo.getPkgId());
                         if (pkgn != null) {
@@ -107,7 +110,12 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
                             responsePkgObtain(ctx, pkgInfo, inetSocketAddress, ds);
                         }
                     }
-                }
+//                }
+//                else {
+//                    log.info(pkgInfo.getPkgId() + " 已组过包");
+//                    // : 2020/9/21  组装成功 回应
+//                    responsePkgAssembled(ctx, pkgInfo, inetSocketAddress);
+//                }
                 break;
             case PkgInfo.TYPE_TRANSFER_TXT:
 
@@ -149,6 +157,7 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
     }
 
     private void responsePkgAssembled(ChannelHandlerContext ctx, PkgInfo pkgInfo, InetSocketAddress inetSocketAddress) {
+        log.info(pkgInfo.getPkgId() + " 回应："+inetSocketAddress.toString());
         pkgInfo.setType(PkgInfo.TYPE_PKG_RECEIVE_FINISH);
         transferTo(ctx, pkgInfo, inetSocketAddress);
     }

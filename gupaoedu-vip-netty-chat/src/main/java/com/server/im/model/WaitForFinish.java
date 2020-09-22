@@ -1,6 +1,7 @@
 package com.server.im.model;
 
 import com.server.im.codec.IMEncoder;
+import com.server.im.udp.server.PkgManager;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.DatagramPacket;
@@ -12,11 +13,19 @@ public class WaitForFinish {
     private InetSocketAddress to;
     private ChannelHandlerContext ctx;
     private PkgInfo pkgInfo;
+    private long initTime=System.currentTimeMillis();
 
-    public WaitForFinish(InetSocketAddress to, ChannelHandlerContext ctx, PkgInfo pkgInfo) {
+    public WaitForFinish(InetSocketAddress to, ChannelHandlerContext ctx, PkgInfo info) {
         this.to = to;
         this.ctx = ctx;
-        this.pkgInfo = pkgInfo;
+        pkgInfo=new PkgInfo();
+        pkgInfo.setVersion((byte) 1);
+        pkgInfo.setTo(info.getTo());
+        pkgInfo.setFrom(info.getFrom());
+        pkgInfo.setPkgCnt((byte) 1);
+        pkgInfo.setcPkgn((byte) 1);
+        pkgInfo.setType(PkgInfo.TYPE_PKG_FINISH);
+        pkgInfo.setPkgId(info.getPkgId());
     }
 
     public boolean send() {
@@ -24,7 +33,9 @@ public class WaitForFinish {
         if (to == null || ctx == null || pkgInfo == null) {
             return flag;
         }
-        pkgInfo.setType(PkgInfo.TYPE_PKG_FINISH);
+        if(System.currentTimeMillis()-initTime> PkgManager.MAX_ALIVE*1000){
+            return flag;
+        }
         try {
             ByteBuf buf = IMEncoder.encodeOne(ctx.channel(), pkgInfo);
             if (buf != null) {

@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 @Slf4j
@@ -29,7 +30,7 @@ public class IMEncoder {
      * @return
      */
     public static List<ByteBuf> encode(Channel ctx, PkgInfo pkgInfo) {
-        List<ByteBuf> ret = new ArrayList<>();
+        List<ByteBuf> ret = new LinkedList<>();
         int len = pkgInfo.length();
         int baselen = pkgInfo.baseLength();
 

@@ -11,7 +11,9 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.timeout.IdleStateHandler;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class UdpServer {
 
     private StateManager stateManager=new StateManager();
@@ -19,8 +21,9 @@ public class UdpServer {
     public void run(int port) throws Exception {
         pkgManager.setPkgInfoConsumer((waitForFinish) -> {
             if (waitForFinish.send()) {
-
+                log.info("发送 waitForFinish.send()");
             } else {
+                log.info("removeWaitForFinish(waitForFinish)");
                 pkgManager.removeWaitForFinish(waitForFinish);
             }
         });
