@@ -27,6 +27,7 @@ public class UdpServer {
                 pkgManager.removeWaitForFinish(waitForFinish);
             }
         });
+        pkgManager.setStateManager(stateManager);
 
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         try {

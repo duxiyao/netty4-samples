@@ -52,9 +52,19 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
                 if (!stateManager.contains(inetSocketAddress)) {
                     //维护客户端通讯通道
                     if (userId != null) {
-                        stateManager.add(userId, inetSocketAddress);
+                        stateManager.update(userId, inetSocketAddress);
                     }
                     String req = "【服务器】您好 " + userId + "," + inetSocketAddress.toString();
+                    log.info(req);
+                }
+                break;
+            case PkgInfo.TYPE_HEART_BEAT:
+                if (stateManager.contains(inetSocketAddress)) {
+                    //维护客户端通讯通道
+                    if (userId != null) {
+                        stateManager.update(userId, inetSocketAddress);
+                    }
+                    String req = "【服务器】update 您好 " + userId + "," + inetSocketAddress.toString();
                     log.info(req);
                 }
                 break;

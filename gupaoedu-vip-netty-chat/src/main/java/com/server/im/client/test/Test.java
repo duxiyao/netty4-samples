@@ -17,6 +17,7 @@ import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.CharsetUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,13 +51,26 @@ public class Test implements Runnable {
     public void run(int port) throws Exception {
         EventLoopGroup group = new NioEventLoopGroup();
         try {
+
+            ChannelInitializer channelInitializer = new ChannelInitializer() {
+                @Override
+                protected void initChannel(Channel ch) throws Exception {
+                    ch.pipeline().addLast(new TestHandler(pkgManager));
+                    ch.pipeline().addLast(new IdleStateHandler(0,1,0));
+                    ch.pipeline().addLast(new PingPongHandler(meId));
+                }
+            };
             Bootstrap b = new Bootstrap();
             b.group(group)
                     .channel(NioDatagramChannel.class)
                     .option(ChannelOption.SO_BROADCAST, true)
                     .option(ChannelOption.SO_SNDBUF, 2 * 1024 * 1024)//
                     .option(ChannelOption.SO_RCVBUF, 2 * 1024 * 1024)//
-                    .handler(new TestHandler(pkgManager));
+//                    .handler(new IdleStateHandler(0,1,0))
+//                    .handler(new PingPongHandler())
+//                    .handler(new TestHandler(pkgManager))
+            .handler(channelInitializer)
+            ;
             Channel ch = b.bind(0).sync().channel();
             //向网段内的所有机器广播
             String data = "" + meId + " ";
@@ -139,6 +153,13 @@ public class Test implements Runnable {
 
 //        test();
 //        System.out.println(UUID.randomUUID().toString());
+
+//        InetSocketAddress to = new InetSocketAddress(
+//                "127.0.0.1", 8888);
+//
+//        InetSocketAddress to1 = new InetSocketAddress(
+//                "127.0.0.1", 8888);
+//        System.out.println(to.equals(to1));
 
     }
 

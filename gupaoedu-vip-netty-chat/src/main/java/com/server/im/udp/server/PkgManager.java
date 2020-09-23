@@ -19,36 +19,42 @@ public class PkgManager {
     public final static int MAX_ALIVE = 30;//缓存30秒
     //pkgid+cpkgn,单个pkginfo包
     private Map<String, AssemblePkg> pkgMap = new ConcurrentHashMap();
-    private CopyOnWriteArrayList<WaitForFinish> waitfininsh=new CopyOnWriteArrayList<>();
+    private CopyOnWriteArrayList<WaitForFinish> waitfininsh = new CopyOnWriteArrayList<>();
     private ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(
             1, 1, 0,
             TimeUnit.SECONDS, new LinkedBlockingDeque<>(10),
             new ThreadPoolExecutor.DiscardPolicy()
     );
-    private volatile boolean check=true;
+    private volatile boolean check = true;
     private Consumer<WaitForFinish> pkgInfoConsumer;
     private Map<String, WholePkg> wholePkgMap = new ConcurrentHashMap();
+    private StateManager stateManager;
 
-    public PkgManager(){
+    public PkgManager() {
         checkPkg();
+    }
+
+    public void setStateManager(StateManager stateManager) {
+        this.stateManager = stateManager;
     }
 
     private void checkPkg() {
         threadPoolExecutor.execute(() -> {
-            long checkPkgTime=System.currentTimeMillis();
+            long checkPkgTime = System.currentTimeMillis();
             while (check) {
 
-                try{
+                try {
 
-                    if(pkgInfoConsumer!=null){
-                        if(waitfininsh.size()>0) {
-                            System.out.println(Thread.currentThread().getName()+"------foreach------"+waitfininsh.size());
+                    if (pkgInfoConsumer != null) {
+                        if (waitfininsh.size() > 0) {
+                            System.out.println(Thread.currentThread().getName() + "------foreach------" + waitfininsh.size());
                             waitfininsh.forEach(pkgInfoConsumer);
                         }
                     }
 
                     long cur = System.currentTimeMillis();
-                    if(cur-checkPkgTime>5000) {
+                    if (cur - checkPkgTime > 5000) {
+
                         Collection<AssemblePkg> collection = pkgMap.values();
                         for (AssemblePkg assemblePkg : collection) {
                             try {
@@ -61,7 +67,7 @@ public class PkgManager {
                             }
                         }
 
-                        Collection<WholePkg>  wholePkgs = wholePkgMap.values();
+                        Collection<WholePkg> wholePkgs = wholePkgMap.values();
                         for (WholePkg wholePkg : wholePkgs) {
                             try {
                                 long m = wholePkg.getInitTime();
@@ -73,11 +79,14 @@ public class PkgManager {
                             }
                         }
 
-                        checkPkgTime=System.currentTimeMillis();
+                        if(stateManager!=null){
+                            stateManager.checkTimeout(cur);
+                        }
+                        checkPkgTime = System.currentTimeMillis();
                     }
 
                     TimeUnit.MILLISECONDS.sleep(20);
-                }catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
@@ -203,35 +212,36 @@ public class PkgManager {
         return pkgInfo;
     }
 
-    public void addWaitForFinish(WaitForFinish waitForFinish){
+    public void addWaitForFinish(WaitForFinish waitForFinish) {
         waitfininsh.add(waitForFinish);
     }
 
-    public void removeWaitForFinish(WaitForFinish waitForFinish){
+    public void removeWaitForFinish(WaitForFinish waitForFinish) {
         waitfininsh.remove(waitForFinish);
     }
 
-    public void release(){
-        check=false;
+    public void release() {
+        check = false;
     }
 
-    public void setPkgInfoConsumer(Consumer<WaitForFinish> consumer){
-        pkgInfoConsumer=consumer;
+    public void setPkgInfoConsumer(Consumer<WaitForFinish> consumer) {
+        pkgInfoConsumer = consumer;
     }
 
-    public void addWholePkg(WholePkg wholePkg){
-        wholePkgMap.put(wholePkg.getPkgId(),wholePkg);
+    public void addWholePkg(WholePkg wholePkg) {
+        wholePkgMap.put(wholePkg.getPkgId(), wholePkg);
     }
 
-    public ByteBuf getByteBuf(String pkgId,int i){
-        if(wholePkgMap.containsKey(pkgId)){
-            WholePkg wholePkg=wholePkgMap.get(pkgId);
+    public ByteBuf getByteBuf(String pkgId, int i) {
+        if (wholePkgMap.containsKey(pkgId)) {
+            WholePkg wholePkg = wholePkgMap.get(pkgId);
             return wholePkg.get(i);
         }
         return null;
     }
 
-    public void removeWholePkg(String pkgId){
+    public void removeWholePkg(String pkgId) {
         wholePkgMap.remove(pkgId);
     }
+
 }

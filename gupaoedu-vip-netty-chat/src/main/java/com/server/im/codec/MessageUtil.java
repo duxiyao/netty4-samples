@@ -67,4 +67,13 @@ public class MessageUtil {
         messageUtil.setData(msg.getBytes(IMEncoder.CODESET));
         return messageUtil.build();
     }
+
+    public static PkgInfo buildHeartBeatMsg(String msg){
+        MessageUtil messageUtil=builder();
+        messageUtil.setFrom(id);
+        messageUtil.setTo("00000000-0000-0000-0000-000000000000");
+        messageUtil.setType(PkgInfo.TYPE_HEART_BEAT);
+        messageUtil.setData(msg.getBytes(IMEncoder.CODESET));
+        return messageUtil.build();
+    }
 }
