@@ -24,6 +24,10 @@ public class PkgInfo {
     public final static byte TYPE_PKG_REMOVED = 4;
     public final static byte TYPE_HEART_BEAT = 5;
     public final static byte TYPE_TRANSFER_TXT = 11;
+    /**
+     * 对方不在线
+     */
+    public final static byte TYPE_TARGET_OFFLINE = 50;
     private String from;
     private String to;
     private Byte type;

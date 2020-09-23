@@ -54,6 +54,7 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
                     if (userId != null) {
                         stateManager.update(userId, inetSocketAddress);
                     }
+                    transferTo(ctx,pkgInfo,inetSocketAddress);
                     String req = "【服务器】您好 " + userId + "," + inetSocketAddress.toString();
                     log.info(req);
                 }
@@ -77,6 +78,7 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
                 for (byte n : pkgns) {
                     PkgInfo which = pkgManager.get(pkgInfo.getPkgId(), n);
                     if (which == null) {
+                        pkgManager.removeWaitForFinish(new WaitForFinish(null, ctx, pkgInfo));
                         writeRemoved(ctx, pkgInfo, inetSocketAddress);
                         break;
                     } else {
@@ -89,6 +91,7 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
                 pkgManager.remove(pkgInfo.getPkgId());
                 break;
             case PkgInfo.TYPE_PKG_REMOVED:
+                pkgManager.removeWaitForFinish(new WaitForFinish(null, ctx, pkgInfo));
                 pkgManager.remove(pkgInfo.getPkgId());
                 break;
             case PkgInfo.TYPE_PKG_FINISH:
@@ -138,6 +141,8 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
                     pkgManager.addOne(pkgInfo);
                 } else {
                     log.info("无法发送给目标");
+                    pkgInfo.setType(PkgInfo.TYPE_TARGET_OFFLINE);
+                    transferTo(ctx, pkgInfo, inetSocketAddress);
                 }
                 break;
             default:

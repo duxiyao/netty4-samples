@@ -1,5 +1,8 @@
 package com.server.im.client.test;
 
+import com.server.im.client.sdk.IMChat;
+import com.server.im.client.sdk.IMSdk;
+import com.server.im.client.sdk.PingPongHandler;
 import com.server.im.codec.IMEncoder;
 import com.server.im.codec.MessageUtil;
 import com.server.im.model.PkgInfo;
@@ -8,7 +11,6 @@ import com.server.im.model.WholePkg;
 import com.server.im.udp.server.PkgManager;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -18,12 +20,12 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.handler.timeout.IdleStateHandler;
-import io.netty.util.CharsetUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -141,13 +143,19 @@ public class Test implements Runnable {
     }
 
     public static void main(String[] args) throws Exception {
-        int port = 8888;
-        if (args != null && args.length > 0) {
-            port = Integer.valueOf(args[0]);
-        }
-        new Thread(new Test(MessageUtil.toid)).start();
-        new Thread(new Test(MessageUtil.id)).start();
+//        int port = 8888;
+//        if (args != null && args.length > 0) {
+//            port = Integer.valueOf(args[0]);
+//        }
+//        new Thread(new Test(MessageUtil.toid)).start();
+//        new Thread(new Test(MessageUtil.id)).start();
 
+        IMSdk.getInstance().init(MessageUtil.id, new Runnable() {
+            @Override
+            public void run() {
+                IMSdk.getInstance().getChat().send(MessageUtil.toid,"abc");
+            }
+        });
 //        System.out.println("for read");
 //        System.in.read();
 

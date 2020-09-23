@@ -1,4 +1,4 @@
-package com.server.im.client.test;
+package com.server.im.client.sdk;
 
 import com.server.im.codec.IMEncoder;
 import com.server.im.codec.MessageUtil;
@@ -16,19 +16,27 @@ import java.util.List;
 
 public class PingPongHandler extends ChannelInboundHandlerAdapter {
     private String meId;
-    InetSocketAddress to = new InetSocketAddress(
-            "127.0.0.1", 8888);
-    public PingPongHandler(String id){
-        meId=id;
+    private InetSocketAddress to;
+
+    public PingPongHandler(String id) {
+        meId = id;
+        to = new InetSocketAddress(
+                "127.0.0.1", 8888);
+    }
+
+    public PingPongHandler(String id, String serverIp, int serverPort) {
+        this.meId = id;
+        to = new InetSocketAddress(
+                serverIp, serverPort);
     }
 
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         System.out.println("userEventTriggered！");
-        if (evt instanceof IdleStateEvent){
-            IdleStateEvent event = (IdleStateEvent)evt;
-            System.out.println("event.state(): "+event.state());
-            switch (event.state()){
+        if (evt instanceof IdleStateEvent) {
+            IdleStateEvent event = (IdleStateEvent) evt;
+            System.out.println("event.state(): " + event.state());
+            switch (event.state()) {
                 case ALL_IDLE:
                     break;
                 case READER_IDLE:
@@ -43,10 +51,11 @@ public class PingPongHandler extends ChannelInboundHandlerAdapter {
                     }
                     ctx.flush();
                     break;
-                default:break;
+                default:
+                    break;
             }
-        }else {
-            super.userEventTriggered(ctx,evt);
+        } else {
+            super.userEventTriggered(ctx, evt);
         }
     }
 

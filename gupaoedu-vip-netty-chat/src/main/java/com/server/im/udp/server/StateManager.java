@@ -2,12 +2,14 @@ package com.server.im.udp.server;
 
 import com.server.im.model.ClientInfo;
 import com.sun.imageio.plugins.common.ImageUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
+@Slf4j
 public class StateManager {
     //ip信息
     private ConcurrentSkipListSet<String> set = new ConcurrentSkipListSet<>();
@@ -21,11 +23,12 @@ public class StateManager {
     }
 
     public InetSocketAddress get(String userId) {
+        ClientInfo clientInfo = null;
         try {
-            ClientInfo clientInfo = clientInfoConcurrentHashMap.get(userId);
+            clientInfo = clientInfoConcurrentHashMap.get(userId);
             return clientInfo.getInetSocketAddress();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("StateManager.get clientInfo==null " + (clientInfo == null));
         }
         return null;
     }
@@ -67,7 +70,7 @@ public class StateManager {
                 try {
                     long target = clientInfo.getIdelTime();
                     if (cur - target > PkgManager.MAX_ALIVE * 1000) {
-                        clientInfoConcurrentHashMap.remove(clientInfo.getUserId());
+                        rm(clientInfo.getUserId());
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

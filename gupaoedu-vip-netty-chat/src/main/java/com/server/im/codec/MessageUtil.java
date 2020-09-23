@@ -50,9 +50,22 @@ public class MessageUtil {
         return pkgInfo;
     }
 
-    public static PkgInfo buildMsg(String to,String msg){
+    public static PkgInfo buildBytes(String uid,String to,byte[] msg){
         MessageUtil messageUtil=builder();
-        messageUtil.setFrom(id);
+        messageUtil.setFrom(uid);
+        messageUtil.setTo(to);
+        messageUtil.setType(PkgInfo.TYPE_TRANSFER_TXT);
+        messageUtil.setData(msg);
+        return messageUtil.build();
+    }
+
+    public static PkgInfo buildMsg(String to,String msg){
+        return buildMsg(id,to,msg);
+    }
+
+    public static PkgInfo buildMsg(String uid,String to,String msg){
+        MessageUtil messageUtil=builder();
+        messageUtil.setFrom(uid);
         messageUtil.setTo(to);
         messageUtil.setType(PkgInfo.TYPE_TRANSFER_TXT);
         messageUtil.setData(msg.getBytes(IMEncoder.CODESET));
