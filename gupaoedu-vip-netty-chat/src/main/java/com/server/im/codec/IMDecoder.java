@@ -49,25 +49,21 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
 
         switch (pkgInfo.getType()) {
             case PkgInfo.TYPE_LOGIN:
-                if (!stateManager.contains(inetSocketAddress)) {
-                    //维护客户端通讯通道
-                    if (userId != null) {
-                        stateManager.update(userId, inetSocketAddress);
-                    }
-                    transferTo(ctx,pkgInfo,inetSocketAddress);
-                    String req = "【服务器】您好 " + userId + "," + inetSocketAddress.toString();
-                    log.info(req);
+                //维护客户端通讯通道
+                if (userId != null) {
+                    stateManager.update(userId, inetSocketAddress);
                 }
+                transferTo(ctx, pkgInfo, inetSocketAddress);
+                String req = "【服务器】您好 " + userId + "," + inetSocketAddress.toString();
+                log.info(req);
                 break;
             case PkgInfo.TYPE_HEART_BEAT:
-                if (stateManager.contains(inetSocketAddress)) {
-                    //维护客户端通讯通道
-                    if (userId != null) {
-                        stateManager.update(userId, inetSocketAddress);
-                    }
-                    String req = "【服务器】update 您好 " + userId + "," + inetSocketAddress.toString();
-                    log.info(req);
+                //维护客户端通讯通道
+                if (userId != null) {
+                    stateManager.update(userId, inetSocketAddress);
                 }
+                req = "【服务器】update 您好 " + userId + "," + inetSocketAddress.toString();
+                log.info(req);
                 break;
             case PkgInfo.TYPE_OBTAIN:
                 //判断类型，如果是客户端索取丢失的数据包
@@ -96,33 +92,33 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
                 break;
             case PkgInfo.TYPE_PKG_FINISH:
 //                if (pkgManager.get(pkgInfo.getPkgId()) == null) {
-                    if (pkgManager.assemblePkg(pkgInfo.getPkgId())) {
-                        log.info(pkgInfo.getPkgId() + " 组装成功");
-                        // : 2020/9/21  组装成功 回应
-                        responsePkgAssembled(ctx, pkgInfo, inetSocketAddress);
-                        //转发
-                        InetSocketAddress toAddr = stateManager.get(to);
-                        if (toAddr != null) {
-                            WaitForFinish waitForFinish = new WaitForFinish(toAddr, ctx, pkgInfo);
-                            // : 2020/9/21 需要一直转发PkgInfo.TYPE_PKG_FINISH直到收到 PkgInfo.TYPE_PKG_RECEIVE_FINISH
-                            pkgManager.addWaitForFinish(waitForFinish);
-                        }
-                    } else {
-                        log.info(pkgInfo.getPkgId() + " 组装失败");
-                        //组装失败
-                        List<Byte> pkgn = pkgManager.getLackPkg(pkgInfo.getPkgId());
-                        if (pkgn != null) {
-                            // : 2020/9/21 像提供者索取
-                            responsePkgObtain(ctx, pkgInfo, inetSocketAddress, pkgn);
-                        } else {
-                            byte total = pkgInfo.getPkgCnt();
-                            List<Byte> ds = new ArrayList<>();
-                            for (byte i = 1; i <= total; i++) {
-                                ds.add(i);
-                            }
-                            responsePkgObtain(ctx, pkgInfo, inetSocketAddress, ds);
-                        }
+                if (pkgManager.assemblePkg(pkgInfo.getPkgId())) {
+                    log.info(pkgInfo.getPkgId() + " 组装成功");
+                    // : 2020/9/21  组装成功 回应
+                    responsePkgAssembled(ctx, pkgInfo, inetSocketAddress);
+                    //转发
+                    InetSocketAddress toAddr = stateManager.get(to);
+                    if (toAddr != null) {
+                        WaitForFinish waitForFinish = new WaitForFinish(toAddr, ctx, pkgInfo);
+                        // : 2020/9/21 需要一直转发PkgInfo.TYPE_PKG_FINISH直到收到 PkgInfo.TYPE_PKG_RECEIVE_FINISH
+                        pkgManager.addWaitForFinish(waitForFinish);
                     }
+                } else {
+                    log.info(pkgInfo.getPkgId() + " 组装失败");
+                    //组装失败
+                    List<Byte> pkgn = pkgManager.getLackPkg(pkgInfo.getPkgId());
+                    if (pkgn != null) {
+                        // : 2020/9/21 像提供者索取
+                        responsePkgObtain(ctx, pkgInfo, inetSocketAddress, pkgn);
+                    } else {
+                        byte total = pkgInfo.getPkgCnt();
+                        List<Byte> ds = new ArrayList<>();
+                        for (byte i = 1; i <= total; i++) {
+                            ds.add(i);
+                        }
+                        responsePkgObtain(ctx, pkgInfo, inetSocketAddress, ds);
+                    }
+                }
 //                }
 //                else {
 //                    log.info(pkgInfo.getPkgId() + " 已组过包");
@@ -135,7 +131,7 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
                 //转发
                 InetSocketAddress toAddr = stateManager.get(to);
                 if (toAddr != null) {
-                    String req = "【服务器】转发 " + toAddr.toString();
+                    req = "【服务器】转发 " + toAddr.toString();
                     log.info(req);
                     transferTo(ctx, pkgInfo, toAddr);
                     pkgManager.addOne(pkgInfo);
@@ -172,7 +168,7 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
     }
 
     private void responsePkgAssembled(ChannelHandlerContext ctx, PkgInfo pkgInfo, InetSocketAddress inetSocketAddress) {
-        log.info(pkgInfo.getPkgId() + " 回应："+inetSocketAddress.toString());
+        log.info(pkgInfo.getPkgId() + " 回应：" + inetSocketAddress.toString());
         pkgInfo.setType(PkgInfo.TYPE_PKG_RECEIVE_FINISH);
         transferTo(ctx, pkgInfo, inetSocketAddress);
     }
