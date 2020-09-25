@@ -58,7 +58,7 @@ public class Test implements Runnable {
                 @Override
                 protected void initChannel(Channel ch) throws Exception {
                     ch.pipeline().addLast(new TestHandler(pkgManager));
-                    ch.pipeline().addLast(new IdleStateHandler(0,1,0));
+                    ch.pipeline().addLast(new IdleStateHandler(0, 1, 0));
                     ch.pipeline().addLast(new PingPongHandler(meId));
                 }
             };
@@ -71,7 +71,7 @@ public class Test implements Runnable {
 //                    .handler(new IdleStateHandler(0,1,0))
 //                    .handler(new PingPongHandler())
 //                    .handler(new TestHandler(pkgManager))
-            .handler(channelInitializer)
+                    .handler(channelInitializer)
             ;
             Channel ch = b.bind(0).sync().channel();
             //向网段内的所有机器广播
@@ -109,11 +109,11 @@ public class Test implements Runnable {
             pkgInfo.setFrom(meId);
             datas = IMEncoder.encode(ch, pkgInfo);
             pkgManager.addWholePkg(new WholePkg(datas, pkgInfo));
-            int i=0;
+            int i = 0;
             for (ByteBuf byteBuf : datas) {
 //                ch.writeAndFlush(new DatagramPacket(byteBuf, to)).sync();
                 i++;
-                if(i==1){
+                if (i == 1) {
                     continue;
                 }
                 ch.write(new DatagramPacket(byteBuf, to));
@@ -153,9 +153,12 @@ public class Test implements Runnable {
         IMSdk.getInstance().init(MessageUtil.id, new Runnable() {
             @Override
             public void run() {
-                IMSdk.getInstance().getChat().send(MessageUtil.toid,"abc");
+                IMSdk.getInstance().getChat().send(MessageUtil.toid, "abc");
             }
         });
+        IMSdk.getInstance().setImOnReceive((pkgInfo -> {
+            System.out.println("=====" + new String(pkgInfo.getData(), IMEncoder.CODESET));
+        }));
 //        System.out.println("for read");
 //        System.in.read();
 

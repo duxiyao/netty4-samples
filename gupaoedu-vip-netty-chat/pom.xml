@@ -57,7 +57,8 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>com.gupaoedu.vip.netty.chat.udp.server.ChineseProverbServer</mainClass>
+							<mainClass>com.server.im.client.test.Test</mainClass>
+<!--							<mainClass>com.server.im.udp.server.UdpServer</mainClass>-->
 						</manifest>
 					</archive>
 					<descriptorRefs>

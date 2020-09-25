@@ -2,6 +2,7 @@ package com.server.im.client.sdk;
 
 import com.server.im.client.sdk.impl.Chat;
 import com.server.im.client.sdk.impl.Login;
+import com.server.im.model.PkgInfo;
 import com.server.im.udp.server.PkgManager;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -40,6 +41,7 @@ public class IMSdk {
     PkgManager pkgManager;
     private InetSocketAddress server;
     private Runnable chatRun;
+    private IMOnReceive imOnReceive;
 
     public void init(String uid, Runnable chatCallable) {
         this.chatRun = chatCallable;
@@ -117,5 +119,19 @@ public class IMSdk {
         } finally {
             group.shutdownGracefully();
         }
+    }
+
+    public void setImOnReceive(IMOnReceive imOnReceive) {
+        this.imOnReceive = imOnReceive;
+    }
+
+    public void onReceive(PkgInfo pkgInfo) {
+        if (imOnReceive != null) {
+            imOnReceive.onReceive(pkgInfo);
+        }
+    }
+
+    public void releaseListener() {
+        imOnReceive = null;
     }
 }

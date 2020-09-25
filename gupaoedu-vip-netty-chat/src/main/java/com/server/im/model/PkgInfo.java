@@ -36,6 +36,7 @@ public class PkgInfo {
     private Byte pkgCnt;
     private Byte cPkgn;
     private Long serverReceTime;
+    private byte[] bdata;
     private ByteArrayOutputStream data = new ByteArrayOutputStream();
 
 
@@ -104,7 +105,14 @@ public class PkgInfo {
     }
 
     public byte[] getData() {
-        return data.toByteArray();
+        saveData();
+        return bdata;
+    }
+
+    private void saveData() {
+        if (bdata == null) {
+            bdata = data.toByteArray();
+        }
     }
 
     public Long getServerReceTime() {
@@ -115,8 +123,8 @@ public class PkgInfo {
         this.serverReceTime = serverReceTime;
     }
 
-    public ByteBuf getBase(ByteBuf byteBuffer,byte total, byte cur, short datalen) {
-        if(byteBuffer==null) {
+    public ByteBuf getBase(ByteBuf byteBuffer, byte total, byte cur, short datalen) {
+        if (byteBuffer == null) {
             byteBuffer = Unpooled.buffer(baseLength() + datalen);
         }
 //        ByteBuffer byteBuffer = ByteBuffer.allocate(baseLength()+datalen);
@@ -149,6 +157,7 @@ public class PkgInfo {
 
     @Override
     public String toString() {
+        saveData();
         return "PkgInfo{" +
                 "from='" + from + '\'' +
                 ", to='" + to + '\'' +
@@ -158,7 +167,7 @@ public class PkgInfo {
                 ", pkgCnt=" + pkgCnt +
                 ", cPkgn=" + cPkgn +
                 ", serverReceTime=" + serverReceTime +
-                ", data=" + data +
+                ", data=" + bdata +
                 '}';
     }
 
@@ -176,12 +185,12 @@ public class PkgInfo {
 //                Objects.equals(getcPkgn(), pkgInfo.getcPkgn());
         return
                 Objects.equals(getPkgId(), pkgInfo.getPkgId()) &&
-                Objects.equals(getcPkgn(), pkgInfo.getcPkgn());
+                        Objects.equals(getcPkgn(), pkgInfo.getcPkgn());
     }
 
     @Override
     public int hashCode() {
 //        return Objects.hash(getFrom(), getTo(), getType(), getVersion(), getPkgId(), getPkgCnt(), getcPkgn());
-        return Objects.hash( getPkgId(),getcPkgn());
+        return Objects.hash(getPkgId(), getcPkgn());
     }
 }

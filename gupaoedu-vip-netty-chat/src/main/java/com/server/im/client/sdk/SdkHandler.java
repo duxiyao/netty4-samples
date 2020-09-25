@@ -68,25 +68,32 @@ public class SdkHandler extends
                 pkgManager.remove(pkgInfo.getPkgId());
                 break;
             case PkgInfo.TYPE_PKG_FINISH:
-                if (pkgManager.assemblePkg(pkgInfo.getPkgId())) {
+                String pkgid = pkgInfo.getPkgId();
+                if (pkgManager.get(pkgid) == null) {
+                    if (pkgManager.assemblePkg(pkgid)) {
+                        // : 2020/9/21  组装成功 回应
+                        responsePkgAssembled(ctx, pkgInfo, inetSocketAddress);
+                        PkgInfo data = pkgManager.get(pkgInfo.getPkgId());
+                        System.out.println("client---" + data.toString());
+                        IMSdk.getInstance().onReceive(data);
+                    } else {
+                        //组装失败
+                        List<Byte> pkgn = pkgManager.getLackPkg(pkgInfo.getPkgId());
+                        if (pkgn != null) {
+                            // : 2020/9/21 像提供者索取
+                            responsePkgObtain(ctx, pkgInfo, inetSocketAddress, pkgn);
+                        } else {
+                            byte total = pkgInfo.getPkgCnt();
+                            List<Byte> ds = new ArrayList<>();
+                            for (byte i = 0; i < total; i++) {
+                                ds.add(i);
+                            }
+                            responsePkgObtain(ctx, pkgInfo, inetSocketAddress, ds);
+                        }
+                    }
+                } else {
                     // : 2020/9/21  组装成功 回应
                     responsePkgAssembled(ctx, pkgInfo, inetSocketAddress);
-                    PkgInfo data = pkgManager.get(pkgInfo.getPkgId());
-                    System.out.println("client---" + data.toString());
-                } else {
-                    //组装失败
-                    List<Byte> pkgn = pkgManager.getLackPkg(pkgInfo.getPkgId());
-                    if (pkgn != null) {
-                        // : 2020/9/21 像提供者索取
-                        responsePkgObtain(ctx, pkgInfo, inetSocketAddress, pkgn);
-                    } else {
-                        byte total = pkgInfo.getPkgCnt();
-                        List<Byte> ds = new ArrayList<>();
-                        for (byte i = 0; i < total; i++) {
-                            ds.add(i);
-                        }
-                        responsePkgObtain(ctx, pkgInfo, inetSocketAddress, ds);
-                    }
                 }
                 break;
             case PkgInfo.TYPE_TRANSFER_TXT:
