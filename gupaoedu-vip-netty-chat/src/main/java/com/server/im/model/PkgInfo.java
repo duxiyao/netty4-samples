@@ -11,6 +11,8 @@ import java.nio.ByteBuffer;
 import java.util.Objects;
 
 public class PkgInfo {
+    // TODO: 2020-10-16 增加告知客户端登录成功，或在线状态
+
     public final static byte TYPE_LOGIN = 0;
     public final static byte TYPE_OBTAIN = 1;
     /**
@@ -24,6 +26,9 @@ public class PkgInfo {
     public final static byte TYPE_PKG_REMOVED = 4;
     public final static byte TYPE_HEART_BEAT = 5;
     public final static byte TYPE_TRANSFER_TXT = 11;
+    public final static byte TYPE_TRANSFER_TRANSPARENT_TXT = 12;//透传
+    public final static byte TYPE_TRANSFER_VIDEO = 13;//
+    public final static byte TYPE_TRANSFER_AUDIO = 14;//
     /**
      * 对方不在线
      */

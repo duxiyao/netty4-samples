@@ -127,6 +127,9 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
 //                }
                 break;
             case PkgInfo.TYPE_TRANSFER_TXT:
+            case PkgInfo.TYPE_TRANSFER_TRANSPARENT_TXT:
+            case PkgInfo.TYPE_TRANSFER_VIDEO:
+            case PkgInfo.TYPE_TRANSFER_AUDIO:
 
                 //转发
                 InetSocketAddress toAddr = stateManager.get(to);
