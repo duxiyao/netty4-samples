@@ -1,4 +1,4 @@
-package com.server.im.model;
+package com.server.im.android.clinet.sdk.model;
 
 import java.util.ArrayList;
 import java.util.Comparator;

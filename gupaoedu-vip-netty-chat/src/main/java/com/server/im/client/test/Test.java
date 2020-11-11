@@ -28,6 +28,11 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * @see com.server.im.android.clinet.TestClient1
+ * @see com.server.im.android.clinet.TestClient2
+ */
+@Deprecated
 @Slf4j
 public class Test implements Runnable {
     //MessageUnpacker
