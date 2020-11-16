@@ -85,9 +85,11 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
             case PkgInfo.TYPE_PKG_RECEIVE_FINISH:
                 pkgManager.removeWaitForFinish(new WaitForFinish(null, ctx, pkgInfo));
                 pkgManager.remove(pkgInfo.getPkgId());
+                pkgManager.removeWholePkg(pkgInfo.getPkgId());
                 break;
             case PkgInfo.TYPE_PKG_REMOVED:
                 pkgManager.removeWaitForFinish(new WaitForFinish(null, ctx, pkgInfo));
+                pkgManager.removeWholePkg(pkgInfo.getPkgId());
                 pkgManager.remove(pkgInfo.getPkgId());
                 break;
             case PkgInfo.TYPE_PKG_FINISH:

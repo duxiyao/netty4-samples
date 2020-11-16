@@ -72,7 +72,8 @@ public class PkgManager {
                             try {
                                 long m = wholePkg.getInitTime();
                                 if (cur - m > MAX_ALIVE * 1000) {
-                                    wholePkgMap.remove(wholePkg.getPkgId());
+                                    removeWholePkg(wholePkg.getPkgId());
+//                                    wholePkgMap.remove(wholePkg.getPkgId());
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -85,6 +86,7 @@ public class PkgManager {
                         checkPkgTime = System.currentTimeMillis();
                     }
 
+                    checkWholePkgCnt();
                     TimeUnit.MILLISECONDS.sleep(20);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -241,7 +243,18 @@ public class PkgManager {
     }
 
     public void removeWholePkg(String pkgId) {
+//        WholePkg wholePkg = wholePkgMap.get(pkgId);
+//        if (wholePkg != null) {
+//            wholePkg.release();
+//        }
         wholePkgMap.remove(pkgId);
+//        System.out.println( "---map.size="+wholePkgMap.size());
     }
 
+    private void checkWholePkgCnt(){
+        if(wholePkgMap.size()>100){
+            wholePkgMap.clear();
+            System.out.println( "---clear--"+wholePkgMap.size());
+        }
+    }
 }
