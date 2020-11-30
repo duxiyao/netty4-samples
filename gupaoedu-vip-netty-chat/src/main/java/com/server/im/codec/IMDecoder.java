@@ -70,16 +70,21 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
                 // : 2020/9/14 索取内存
                 //若内存有则回馈客户端；若没有则告诉客户端过期了
                 // : 2020/9/14
+                boolean addflag=true;
+                pkgManager.removeWaitForFinish(new WaitForFinish(null, ctx, pkgInfo));
                 byte[] pkgns = pkgInfo.getData();
                 for (byte n : pkgns) {
                     PkgInfo which = pkgManager.get(pkgInfo.getPkgId(), n);
                     if (which == null) {
-                        pkgManager.removeWaitForFinish(new WaitForFinish(null, ctx, pkgInfo));
+                        addflag=false;
                         writeRemoved(ctx, pkgInfo, inetSocketAddress);
                         break;
                     } else {
                         writeMissing(ctx, which, inetSocketAddress);
                     }
+                }
+                if(addflag){
+                    pkgManager.addWaitForFinish(new WaitForFinish(null, ctx, pkgInfo));
                 }
                 break;
             case PkgInfo.TYPE_PKG_RECEIVE_FINISH:

@@ -50,17 +50,22 @@ public class SdkHandler extends
                 }
                 break;
             case PkgInfo.TYPE_OBTAIN:
+                boolean addflag=true;
+                pkgManager.removeWaitForFinish(new WaitForFinish(null, ctx, pkgInfo));
                 byte[] pkgns = pkgInfo.getData();
                 for (byte n : pkgns) {
                     ByteBuf which = pkgManager.getByteBuf(pkgInfo.getPkgId(), n);
                     if (which == null) {
-                        pkgManager.removeWaitForFinish(new WaitForFinish(null, ctx, pkgInfo));
+                        addflag=false;
                         writeRemoved(ctx, pkgInfo, inetSocketAddress);
                         break;
                     } else {
                         System.out.println("----writeMissing");
                         writeMissing(ctx, which, inetSocketAddress);
                     }
+                }
+                if(addflag){
+                    pkgManager.addWaitForFinish(new WaitForFinish(null, ctx, pkgInfo));
                 }
                 break;
             case PkgInfo.TYPE_PKG_RECEIVE_FINISH:

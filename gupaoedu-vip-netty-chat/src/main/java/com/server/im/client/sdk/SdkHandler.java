@@ -43,17 +43,22 @@ public class SdkHandler extends
                 log.info("登录成功");
                 break;
             case PkgInfo.TYPE_OBTAIN:
+                boolean addflag=true;
+                pkgManager.removeWaitForFinish(new WaitForFinish(null, ctx, pkgInfo));
                 byte[] pkgns = pkgInfo.getData();
                 for (byte n : pkgns) {
                     ByteBuf which = pkgManager.getByteBuf(pkgInfo.getPkgId(), n);
                     if (which == null) {
-                        pkgManager.removeWaitForFinish(new WaitForFinish(null, ctx, pkgInfo));
+                        addflag=false;
                         writeRemoved(ctx, pkgInfo, inetSocketAddress);
                         break;
                     } else {
                         log.info("----writeMissing");
                         writeMissing(ctx, which, inetSocketAddress);
                     }
+                }
+                if(addflag){
+                    pkgManager.addWaitForFinish(new WaitForFinish(null, ctx, pkgInfo));
                 }
                 break;
             case PkgInfo.TYPE_PKG_RECEIVE_FINISH:
