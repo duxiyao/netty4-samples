@@ -2,3 +2,5 @@
 **/logs
 *.iml
 **/.idea
+**/build
+**/jniLib

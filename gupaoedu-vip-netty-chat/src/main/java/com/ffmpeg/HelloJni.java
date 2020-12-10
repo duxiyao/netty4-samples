@@ -55,6 +55,12 @@ import java.util.Properties;
  * arg:  -I"$JDKPath$/include" -I"$JDKPath$/include/darwin" -dynamiclib -o ./jniLib/$FileNameWithoutExtension$.dylib ./cpp/$FileNameWithoutExtension$.cpp
  * workingdir:  $ModuleFileDir$/src/main
  *
+ *
+ * name  cmake
+ * program:  /usr/local/bin/cmake
+ * arg:  $ModuleFileDir$/src/main/cpp/
+ * workingdir:  $ModuleFileDir$/src/main/cpp/build/
+ *
  */
 public class HelloJni {
     public static void main(String[] args) {
@@ -69,7 +75,7 @@ public class HelloJni {
             System.out.println(key.toString()+"==="+System.getProperty(key.toString()));
         });
 //        System.out.println(HelloJni.class.get().get);
-//        new HelloJni().sayHello();
+        new HelloJni().sayHello();
     }
     static {
         /**
@@ -87,7 +93,7 @@ public class HelloJni {
 //        System.setProperty( "java.library.path", System.getProperty("java.library.path")+".:/Users/dyz/AndroidStudioProjects/stduy_code/aboutnetty/netty4-samples/gupaoedu-vip-netty-chat/src/main/jniLib/" );
 //        System.out.println(System.getProperty("java.library.path"));
 //        System.load("/Users/dyz/AndroidStudioProjects/stduy_code/aboutnetty/netty4-samples/gupaoedu-vip-netty-chat/src/main/jniLib/libtest.so");
-        System.loadLibrary("com_ffmpeg_HelloJni1");
+        System.loadLibrary("com_ffmpeg_HelloJni");
 //        System.loadLibrary("c");
     }
     private native void sayHello();
