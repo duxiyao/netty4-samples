@@ -68,6 +68,7 @@ public class stun {
         detector.start();
         System.out.println("STUN server detector started;");
 
+//        Thread.sleep(5000);
         StunAddress mappedAddress = null;
         try {
             mappedAddress = detector.getMappingFor(localPort);
@@ -75,7 +76,6 @@ public class stun {
             e.printStackTrace();
         }
 
-        System.out.println("lala");
         detector.shutDown();
         if (mappedAddress != null) {
             System.out.println("stun: no nat detected");

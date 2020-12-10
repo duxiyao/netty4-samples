@@ -33,6 +33,28 @@ import java.util.Properties;
  *
  * $JDKPath$/bin/javah
  * -jni -classpath $OutputPath$ -d $ModuleFileDir$/src/main/cpp/include $FileClass$
+ *
+ *
+ * name gcc
+ * program:  /usr/bin/gcc
+ * arg:  $FilePath$ -o $ModuleFileDir$/target/$FileNameWithoutExtension$.out -framework Cocoa -I /usr/local/include -L /usr/local/lib -lavformat -lavcodec -lavutil -lavdevice -lswscale
+ * workingdir:  $ProjectFileDir$
+ *
+ * name  generate header file
+ * program:  $JDKPath$/bin/javah
+ * arg:  -jni -classpath $OutputPath$ -d $ModuleFileDir$/src/main/cpp/include $FileClass$
+ * workingdir:  $ProjectFileDir$
+ *
+ * name  generate cxx file
+ * program:  /usr/bin/touch
+ * arg:  $ModuleFileDir$/src/main/cpp/$FileNameWithoutAllExtensions$.cpp
+ * workingdir:  $ProjectFileDir$
+ *
+ * name  generate so
+ * program:  /usr/bin/g++
+ * arg:  -I"$JDKPath$/include" -I"$JDKPath$/include/darwin" -dynamiclib -o ./jniLib/$FileNameWithoutExtension$.dylib ./cpp/$FileNameWithoutExtension$.cpp
+ * workingdir:  $ModuleFileDir$/src/main
+ *
  */
 public class HelloJni {
     public static void main(String[] args) {

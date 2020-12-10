@@ -1,3 +1,5 @@
+学习并且在该项目上做通讯拓展
+
 # 《Netty4核心原理与手写RPC框架实战》
 
 ### 京东购买链接：[https://item.jd.com/12829724.html](https://item.jd.com/12829724.html)
