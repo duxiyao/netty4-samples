@@ -21,7 +21,9 @@ public:
 
     void onError(int threadMode, int errorCode);
 
-    void onProgress(int threadMode, int errorCode);
+    void onProgress(int threadMode, jbyteArray pro);
+
+    void onProgress(int threadMode, jobject buffer);
 
 private:
     JavaVM *javaVM;
@@ -30,6 +32,7 @@ private:
     jmethodID jmd_prepared;
     jmethodID jmd_onError;
     jmethodID jmd_onProgress;
+    jmethodID jmd_onProgress1;
 
 
 };

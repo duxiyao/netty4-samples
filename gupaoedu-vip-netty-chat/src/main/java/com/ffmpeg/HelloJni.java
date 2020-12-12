@@ -1,5 +1,6 @@
 package com.ffmpeg;
 
+import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.Properties;
 
@@ -62,21 +63,6 @@ import java.util.Properties;
  * workingdir:  $ModuleFileDir$/src/main/cpp/build/
  */
 public class HelloJni {
-    public static void main(String[] args) {
-//        Map<String, String> env = System.getenv();
-//        for (String envName : env.keySet()) {
-//            System.out.format("%s=%s%n", envName, env.get(envName));
-//        }
-//
-//        System.out.println(System.getProperty("java.class.path"));
-//        Properties properties=System.getProperties();
-//        properties.keySet().forEach(key->{
-//            System.out.println(key.toString()+"==="+System.getProperty(key.toString()));
-//        });
-//        System.out.println(HelloJni.class.get().get);
-        new HelloJni().sayHello();
-        new HelloJni2().stopPublish();
-    }
 
     static {
         /**
@@ -98,7 +84,32 @@ public class HelloJni {
 //        System.loadLibrary("c");
     }
 
+    public static void main(String[] args) throws InterruptedException {
+//        Map<String, String> env = System.getenv();
+//        for (String envName : env.keySet()) {
+//            System.out.format("%s=%s%n", envName, env.get(envName));
+//        }
+//
+//        System.out.println(System.getProperty("java.class.path"));
+//        Properties properties=System.getProperties();
+//        properties.keySet().forEach(key->{
+//            System.out.println(key.toString()+"==="+System.getProperty(key.toString()));
+//        });
+//        System.out.println(HelloJni.class.get().get);
+        new HelloJni().sayHello();
+        new HelloJni2().stopPublish();
+        ByteBuffer data = ByteBuffer.allocateDirect(2);
+        data.put((byte) 1);
+        data.put((byte) 3);
+        new HelloJni2().onPreviewFrame(new byte[]{1, 2}, 0, 0, data);
+//        Thread.sleep(1000);
+        new HelloJni().sayHello1();
+        String s = "";
+    }
+
     private native void sayHello();
+    private native void sayHello1();
+
     /**
      * windows linux mac loadLibrary
      * java.lang.UnsatisfiedLinkError: no com_ffmpeg_HelloJni in java.library.path
@@ -113,18 +124,25 @@ public class HelloJni {
      * 给JNI 方式调用的方法，准备成功
      */
     public void onPrepared() {
-        System.out.println("cb onPrepared");
+        new HelloJni2().log("cb onPrepared");
     }
 
     /**
      * 给JNI 方式回调的方法（进行错误的回调）
      */
     public void onError(int errorCode) {
-        System.out.println("cb onError " + errorCode);
+//        System.out.println("cb onError " + errorCode);
+        new HelloJni2().log("cb onError " + errorCode);
     }
 
     // native层传递上来的 进度值
-    public void onProgress(int progress) {
-        System.out.println("cb onProgress " + progress);
+    public void onProgress(byte[] data) {
+        new HelloJni2().log("cb onProgress1 " + data[0] + "  " + data[1]);
+    }
+
+    public void onProgress(ByteBuffer byteBuffer) {
+        new HelloJni2().log("cb onProgress2 "+byteBuffer.get()+ "  " +byteBuffer.get());
+//        byte[] data = byteBuffer.array();
+//        System.out.println("cb onProgress2 " + data[0] + "  " + data[1]);
     }
 }

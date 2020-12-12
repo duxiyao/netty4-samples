@@ -11,7 +11,8 @@ JavaCallHelper::JavaCallHelper(JavaVM *javaVM_, JNIEnv *env_, jobject instance_)
 //    xx\app\build\intermediates\classes\debug>javap -s com.netease.jnitest.Helper
     jmd_prepared = env->GetMethodID(clazz, "onPrepared", "()V");
     jmd_onError = env->GetMethodID(clazz, "onError", "(I)V");
-    jmd_onProgress = env->GetMethodID(clazz, "onProgress", "(I)V");
+    jmd_onProgress = env->GetMethodID(clazz, "onProgress", "([B)V");
+    jmd_onProgress1 = env->GetMethodID(clazz, "onProgress", "(Ljava/nio/ByteBuffer;)V");
 
 }
 
@@ -49,7 +50,7 @@ void JavaCallHelper::onError(int threadMode, int errorCode) {
     }
 }
 
-void JavaCallHelper::onProgress(int threadMode, int progress) {
+void JavaCallHelper::onProgress(int threadMode, jbyteArray progress) {
     if (threadMode == THREAD_MAIN) {
         //主线程
         env->CallVoidMethod(instance, jmd_onProgress, progress);
@@ -59,6 +60,20 @@ void JavaCallHelper::onProgress(int threadMode, int progress) {
         JNIEnv *env_child;
         javaVM->AttachCurrentThread((void**)&env_child, 0);
         env_child->CallVoidMethod(instance, jmd_onProgress, progress);
+        javaVM->DetachCurrentThread();
+    }
+}
+
+void JavaCallHelper::onProgress(int threadMode, jobject buffer) {
+    if (threadMode == THREAD_MAIN) {
+        //主线程
+        env->CallVoidMethod(instance, jmd_onProgress1, buffer);
+    } else {
+        //子线程
+        //当前子线程的 JNIEnv
+        JNIEnv *env_child;
+        javaVM->AttachCurrentThread((void**)&env_child, 0);
+        env_child->CallVoidMethod(instance, jmd_onProgress1, buffer);
         javaVM->DetachCurrentThread();
     }
 }

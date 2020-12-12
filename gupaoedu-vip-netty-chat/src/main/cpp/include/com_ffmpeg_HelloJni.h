@@ -14,6 +14,8 @@ extern "C" {
  */
 JNIEXPORT void JNICALL Java_com_ffmpeg_HelloJni_sayHello
   (JNIEnv *, jobject);
+JNIEXPORT void JNICALL Java_com_ffmpeg_HelloJni_sayHello1
+  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }

@@ -12,7 +12,7 @@ MESSAGE(STATUS "JAVA_HOME dir:$ENV{JAVA_HOME}")
 
 #找到包含的所有cpp文件,不包含.h文件
 file(GLOB allCpp *.cpp)
-file(GLOB allC *.c)
+#file(GLOB allC *.c)
 
 #添加自己编写的 cpp源文件生成动态库
 add_library(
