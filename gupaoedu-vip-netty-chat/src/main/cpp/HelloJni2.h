@@ -1,12 +1,13 @@
 /**
 https://blog.csdn.net/zhangbangqian/article/details/78753126
 https://blog.csdn.net/trent1985/article/details/39055291
+https://www.jianshu.com/p/c867e4abcb5f 哪些jni对象需要手动释放
 */
 
 void log(JNIEnv *env, jobject obj, jstring log) {
 
     const char *l = env->GetStringUTFChars(log, NULL);
-    printf("%s",l);
+    printf("%s\n",l);
     env->ReleaseStringUTFChars(log, l);
 }
 /**
@@ -66,7 +67,7 @@ void onPreviewFrame(JNIEnv *env, jobject obj, jbyteArray yuvArray, jint width,
         return ;
     }
     printf("%d %d",pData[0],pData[1]);
-    env->DeleteGlobalRef(buffer);
+    env->DeleteLocalRef(buffer);
     //jbyteArray data = env->NewByteArray(dwCapacity);                  //创建与buffer容量一样的byte[]
     //env->SetByteArrayRegion(data, 0, dwCapacity, pData);              //数据拷贝到data中
     //return data;

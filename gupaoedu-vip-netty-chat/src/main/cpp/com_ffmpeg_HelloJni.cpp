@@ -83,7 +83,7 @@ JNIEXPORT void JNICALL Java_com_ffmpeg_HelloJni_sayHello1
     printf("hello 3.\n");
     javaCallHelper->onProgress(THREAD_MAIN,buffer);
     printf("hello 4.\n");
-    env->DeleteGlobalRef(buffer);
+    env->DeleteLocalRef(buffer);
     DELETE(javaCallHelper);
     printf("hello 5.\n");
 }
