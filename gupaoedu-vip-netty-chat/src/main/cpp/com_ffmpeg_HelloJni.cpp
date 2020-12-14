@@ -2,6 +2,8 @@
 #include "include/com_ffmpeg_HelloJni.h"
 #include "JavaCallHelper.h"
 #include "HelloJni2.h"
+#include "capture_camera.h"
+#include <unistd.h>
 
 #define DELETE(object) if(object){delete object; object = 0;}
 
@@ -51,6 +53,8 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
 JNIEXPORT void JNICALL Java_com_ffmpeg_HelloJni_sayHello
   (JNIEnv *env, jobject instance){
     printf("hello world.\n");
+    capture();
+//    sleep(1000);
     javaCallHelper = new JavaCallHelper(javaVM, env, instance);
     javaCallHelper->onPrepared(THREAD_MAIN);
 }
@@ -68,6 +72,7 @@ JNIEXPORT void JNICALL Java_com_ffmpeg_HelloJni_sayHello1
     printf("\nhello 0.\n");
     env->DeleteLocalRef(data);
     env->ReleaseByteArrayElements(data, pdata, 0);
+
     javaCallHelper->onError(THREAD_MAIN,-1);
 
     printf("hello 1.\n");
@@ -85,5 +90,6 @@ JNIEXPORT void JNICALL Java_com_ffmpeg_HelloJni_sayHello1
     printf("hello 4.\n");
     env->DeleteLocalRef(buffer);
     DELETE(javaCallHelper);
+//    pData1=0;
     printf("hello 5.\n");
 }

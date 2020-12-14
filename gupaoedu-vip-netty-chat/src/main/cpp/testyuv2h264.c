@@ -11,6 +11,8 @@ ffplay -stats -f hevc test.h264
 
 https://blog.csdn.net/zhangbangqian/article/details/78753126
 jni java 操作byte 与 bytebuffer
+
+https://www.jianshu.com/p/c867e4abcb5f
 */
 
 #include <stdio.h>

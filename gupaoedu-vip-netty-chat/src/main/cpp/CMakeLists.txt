@@ -32,20 +32,64 @@ include_directories(
     $ENV{JAVA_HOME}/include
     $ENV{JAVA_HOME}/include/darwin
     ${CMAKE_SOURCE_DIR}/include
+    /usr/local/include
 )
 
 #添加ffmpeg 库
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}
-#    -L${CMAKE_SOURCE_DIR}/libs/}"
-#)
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -L/usr/local/lib}")
+link_directories("/usr/local/lib" "/usr/local/lib")
 
 #指定 rtmp静态库文件目录
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -L${CMAKE_SOURCE_DIR}/librtmp/libs/${CMAKE_ANDROID_ARCH_ABI}")
 
+add_library(
+        avformat SHARED IMPORTED
+)
+set_target_properties(avformat
+        PROPERTIES IMPORTED_LOCATION
+        /usr/local/lib/libavformat.dylib
+        )
+
+add_library(
+        avcodec SHARED IMPORTED
+)
+set_target_properties(avcodec
+        PROPERTIES IMPORTED_LOCATION
+        /usr/local/lib/libavcodec.dylib
+        )
+
+add_library(
+        avutil SHARED IMPORTED
+)
+set_target_properties(avutil
+        PROPERTIES IMPORTED_LOCATION
+        /usr/local/lib/libavutil.dylib
+        )
+
+add_library(
+        avdevice SHARED IMPORTED
+)
+set_target_properties(avdevice
+        PROPERTIES IMPORTED_LOCATION
+        /usr/local/lib/libavdevice.dylib
+        )
+
+add_library(
+        swscale SHARED IMPORTED
+)
+set_target_properties(swscale
+        PROPERTIES IMPORTED_LOCATION
+        /usr/local/lib/libswscale.dylib
+        )
 
 #最后开始链接库
 target_link_libraries(
         myffmpeg
+        avformat
+        avcodec
+        avutil
+        avdevice
+        swscale
 )
 
 #        -Wl,--start-group
