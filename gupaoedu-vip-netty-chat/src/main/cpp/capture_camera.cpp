@@ -43,6 +43,7 @@ extern "C"
 #define V_WH "1280x720"
 #define PX_FMT "uyvy422"
 
+static int frame_count=0;
 
 static AVFrame* create_frame(int width, int height){
 
@@ -153,7 +154,8 @@ static void decodeandencode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *p
 
         sws_scale(img_convert_ctx, (const uint8_t * const*)frame->data,
                   frame->linesize, 0, dec_ctx->height, dstFrame->data, dstFrame->linesize);
-        // dstFrame->pts=frame->pts;
+//        dstFrame->pts=frame->pts++;
+        dstFrame->pts=frame_count;
          /* encode the image */
 		encode(enc_ctx, dstFrame, encodedPkt, test264);
     	av_frame_free(&dstFrame);
@@ -332,11 +334,12 @@ static int open_encode(AVCodec *pCodec,AVCodecContext * &pCodecCtx,AVCodecContex
     	return -1;
     }
      /* put sample parameters */
-    pCodecCtx->bit_rate = pDecodeCodecCtx->bit_rate;
+//    pCodecCtx->bit_rate = pDecodeCodecCtx->bit_rate;
     /* resolution must be a multiple of two */
     pCodecCtx->width = pDecodeCodecCtx->width;
     pCodecCtx->height = pDecodeCodecCtx->height;
     printf("width:%d height:%d.\n",pDecodeCodecCtx->width,pDecodeCodecCtx->height);
+
     /* frames per second */
     pCodecCtx->time_base = (AVRational){1, 30};
     pCodecCtx->framerate = (AVRational){30, 1};
@@ -348,9 +351,11 @@ static int open_encode(AVCodec *pCodec,AVCodecContext * &pCodecCtx,AVCodecContex
      */
     pCodecCtx->gop_size = pDecodeCodecCtx->gop_size;
     pCodecCtx->max_b_frames = pDecodeCodecCtx->max_b_frames;
+    printf("pCodecCtx->gop_size:%d pCodecCtx->max_b_frames:%d.\n",pCodecCtx->gop_size,pCodecCtx->max_b_frames);
     pCodecCtx->pix_fmt =  AV_PIX_FMT_YUV420P;
     if (pCodec->id == AV_CODEC_ID_H264){
-        av_opt_set(pCodecCtx->priv_data, "preset", "slow", 0);
+        //https://www.jianshu.com/p/b46a33dd958d  刚开始preset是slow，导致播放跟快进似的
+        av_opt_set(pCodecCtx->priv_data, "preset", "ultrafast", 0);
         av_opt_set(pCodecCtx->priv_data, "tune", "zerolatency", 0);
     	// av_dict_set(pCodecCtx->priv_data, "tune", "zerolatency", 0);
     }
@@ -411,13 +416,12 @@ int capture()
     img_convert_ctx = sws_getContext(pDecodeCodecCtx->width, pDecodeCodecCtx->height, pDecodeCodecCtx->pix_fmt,
     								 pCodecCtx->width, pCodecCtx->height, AV_PIX_FMT_YUV420P, SWS_BICUBIC, NULL, NULL, NULL);
 
-    int quitcount=0;
     for (;;) {
     	if(av_read_frame(pFormatCtx, packet)>=0){
 //        	printf("readed packet.\n");
     		if(packet->stream_index==videoindex){
-        			quitcount++;
-        			if(quitcount>=100){
+        			frame_count++;
+        			if(frame_count>=200){
         				break;
         			}
             	decodeandencode(pDecodeCodecCtx, pFrame, packet,test264,pCodecCtx,encodedPkt,img_convert_ctx);
@@ -438,8 +442,8 @@ int capture()
     //todo
     // encode(pCodecCtx, NULL, encodedPkt, test264);
     /* add sequence end code to have a real MPEG file */
-    uint8_t endcode[] = { 0, 0, 1, 0xb7 };
-    fwrite(endcode, 1, sizeof(endcode), test264);
+//    uint8_t endcode[] = { 0, 0, 1, 0xb7 };
+//    fwrite(endcode, 1, sizeof(endcode), test264);
     fclose(test264);
     avcodec_free_context(&pCodecCtx);
     avcodec_free_context(&pDecodeCodecCtx);
