@@ -416,9 +416,9 @@ int capture()
 //        	printf("readed packet.\n");
     		if(packet->stream_index==videoindex){
         			frame_count++;
-        			if(frame_count>=100){
-        				break;
-        			}
+//        			if(frame_count>=100){
+//        				break;
+//        			}
         		//采集摄像头数据以及编解码，需要分开线程处理。因为若采集 后者 编码 互相占用时间，会影响真实的帧率，会导致播放时候像是在快进
             	decodeandencode(pDecodeCodecCtx, pFrame, packet,test264,pCodecCtx,encodedPkt,img_convert_ctx);
     		}
