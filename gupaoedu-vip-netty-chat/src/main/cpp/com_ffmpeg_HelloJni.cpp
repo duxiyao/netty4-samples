@@ -1,19 +1,19 @@
 #include <stdio.h>
 #include "include/com_ffmpeg_HelloJni.h"
-#include "JavaCallHelper.h"
+//#include "include/JavaCallHelper.h"
 #include "HelloJni2.h"
-#include "capture_camera.h"
+#include <test_capture_camera.h>
 #include <unistd.h>
 
 #define DELETE(object) if(object){delete object; object = 0;}
 
-JavaVM *javaVM = 0;
+static JavaVM *javaVM = 0;
 JavaCallHelper *javaCallHelper = 0;
 
 /**
  * 动态注册
  */
-JNINativeMethod methods[] = {
+static JNINativeMethod methods[] = {
         {( char *)"onPreviewFrame", ( char *)"([BIILjava/nio/ByteBuffer;)V",                 (void *) onPreviewFrame},
         {( char *)"log",   ( char *)"(Ljava/lang/String;)V", (void *) log},
         {( char *)"startPublish",   ( char *)"(Ljava/lang/String;II)V", (void *) startPublish},
@@ -25,7 +25,7 @@ JNINativeMethod methods[] = {
  * @param env
  * @return
  */
-jint registerNativeMethod(JNIEnv *env) {
+static jint registerNativeMethod(JNIEnv *env) {
     jclass cl = env->FindClass("com/ffmpeg/HelloJni2");
     if ((env->RegisterNatives(cl, methods, sizeof(methods) / sizeof(methods[0]))) < 0) {
         return -1;
@@ -33,9 +33,10 @@ jint registerNativeMethod(JNIEnv *env) {
     return 0;
 }
 
-jint JNI_OnLoad(JavaVM *vm, void *reserved) {
+//无法同时存在两个。若进行测试，将JNI_OnLoad1改为JNI_OnLoad，将capture_camera.cpp里的JNI_OnLoad改为JNI_OnLoad1
+jint JNI_OnLoad1(JavaVM *vm, void *reserved) {
     javaVM = vm;
-    printf("JNI_OnLoad.\n");
+    printf("hello JNI_OnLoad.\n");
     JNIEnv *env = NULL;
     if (vm->GetEnv((void **) &env, JNI_VERSION_1_4) != JNI_OK) {
         printf("获取JNIEnv失败.\n");
@@ -53,10 +54,10 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
 JNIEXPORT void JNICALL Java_com_ffmpeg_HelloJni_sayHello
   (JNIEnv *env, jobject instance){
     printf("hello world.\n");
-    capture();
 //    sleep(1000);
     javaCallHelper = new JavaCallHelper(javaVM, env, instance);
-    javaCallHelper->onPrepared(THREAD_MAIN);
+//    javaCallHelper->onPrepared(THREAD_MAIN);
+    test_capture(javaCallHelper);
 }
 
 JNIEXPORT void JNICALL Java_com_ffmpeg_HelloJni_sayHello1

@@ -2,6 +2,7 @@
 // Created by Administrator on 2020/6/30.
 //
 
+#include <stdint.h>
 //标记线程模式
 #define  THREAD_MAIN 1
 #define  THREAD_CHILD 2
@@ -25,6 +26,7 @@ public:
 
     void onProgress(int threadMode, jobject buffer);
 
+    void onGet264Data(int size,uint8_t *data);
 private:
     JavaVM *javaVM;
     JNIEnv *env;

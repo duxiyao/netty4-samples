@@ -1,9 +1,9 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <JavaCallHelper.h>
 #include <capture_camera.h>
-#include <jni_init.h>
-#include <com_ffmpeg_CaptureCamera.h>
 
 #define __STDC_CONSTANT_MACROS
 
@@ -44,7 +44,7 @@ extern "C"
 #define V_WH "1280x720"
 #define PX_FMT "uyvy422"
 
-static CaptureHelper *helper =0;
+static JavaCallHelper *javaCallHelper = 0;
 
 static AVFrame* create_frame(int width, int height){
 
@@ -110,7 +110,7 @@ static void encode(AVCodecContext *enc_ctx, AVFrame * &frame, AVPacket *pkt,
 //        printf("pre4data is %d %d %d %d \n", pkt->data[0],pkt->data[1],pkt->data[2],pkt->data[3]);
 
 //        fwrite(pkt->data, 1, pkt->size, outfile);
-        helper->onGet264Data(pkt->size,pkt->data);
+        javaCallHelper->onGet264Data(pkt->size,pkt->data);
 
         av_packet_unref(pkt);
     }
@@ -157,7 +157,7 @@ static void decodeandencode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *p
 }
 
 //Show Dshow Device
-void show_dshow_device(){
+static void show_dshow_device(){
 	AVFormatContext *pFormatCtx = avformat_alloc_context();
 	AVDictionary* options = NULL;
 	av_dict_set(&options,"list_devices","true",0);
@@ -168,7 +168,7 @@ void show_dshow_device(){
 }
 
 //Show Dshow Device Option
-void show_dshow_device_option(){
+static void show_dshow_device_option(){
 	AVFormatContext *pFormatCtx = avformat_alloc_context();
 	AVDictionary* options = NULL;
 	av_dict_set(&options,"list_options","true",0);
@@ -179,7 +179,7 @@ void show_dshow_device_option(){
 }
 
 //Show VFW Device
-void show_vfw_device(){
+static void show_vfw_device(){
 	AVFormatContext *pFormatCtx = avformat_alloc_context();
 	AVInputFormat *iformat = av_find_input_format("vfwcap");
 	printf("========VFW Device Info======\n");
@@ -188,7 +188,7 @@ void show_vfw_device(){
 }
 
 //Show AVFoundation Device
-void show_avfoundation_device(){
+static void show_avfoundation_device(){
     AVFormatContext *pFormatCtx = avformat_alloc_context();
     AVDictionary* options = NULL;
     av_dict_set(&options,"list_devices","true",0);
@@ -367,8 +367,9 @@ static int open_encode(AVCodec *pCodec,AVCodecContext * &pCodecCtx,AVCodecContex
     return 0;
 }
 
-int capture()
+int test_capture(JavaCallHelper * &helper)
 {
+    javaCallHelper=helper;
 	AVFormatContext	*pFormatCtx;
 	int			     videoindex;
 	AVCodecParameters *pCodecParameters;
@@ -448,37 +449,4 @@ int capture()
     avformat_close_input(&pFormatCtx);
 
     return 0;
-}
-
-JNIEXPORT void JNICALL Java_com_ffmpeg_CaptureCamera_startCapture
-  (JNIEnv *env, jobject instance){
-    helper=new CaptureHelper(javaVM,env,instance);
-    capture();
-}
-
-CaptureHelper::CaptureHelper(JavaVM *javaVM_, JNIEnv *env_, jobject instance_){
-    this->javaVM = javaVM_;
-    this->env = env_;
-//    this->instance = instance_;//不能直接赋值！
-    //一旦涉及到 jobject 跨方法、跨线程，需要创建全局引用
-    this->instance = env->NewGlobalRef(instance_);
-    jclass clazz = env->GetObjectClass(instance);
-//    cd 进入 class所在的目录 执行： javap -s 全限定名,查看输出的 descriptor
-//    xx\app\build\intermediates\classes\debug>javap -s com.netease.jnitest.Helper
-    jmd_on_get_data = env->GetMethodID(clazz, "onGetData", "([B)V");
-}
-
-CaptureHelper::~CaptureHelper(){
-    javaVM = 0;
-    env->DeleteGlobalRef(instance);
-    instance = 0;
-}
-
-void CaptureHelper::onGet264Data(int size,uint8_t *d){
-    jbyteArray data = env->NewByteArray(size);                  //创建与buffer容量一样的byte[]
-    env->SetByteArrayRegion(data, 0, size, (jbyte*)d);                //数据拷贝到data中
-
-    env->CallVoidMethod(instance, jmd_on_get_data, data);
-
-    env->DeleteLocalRef(data);
 }

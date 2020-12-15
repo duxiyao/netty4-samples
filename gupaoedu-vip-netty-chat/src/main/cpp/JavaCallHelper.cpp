@@ -1,4 +1,4 @@
-#include "JavaCallHelper.h"
+#include <JavaCallHelper.h>
 
 JavaCallHelper::JavaCallHelper(JavaVM *javaVM_, JNIEnv *env_, jobject instance_) {
     this->javaVM = javaVM_;
@@ -77,3 +77,11 @@ void JavaCallHelper::onProgress(int threadMode, jobject buffer) {
         javaVM->DetachCurrentThread();
     }
 }
+
+void JavaCallHelper::onGet264Data(int size,uint8_t *d){
+    jbyteArray data = env->NewByteArray(size);                  //创建与buffer容量一样的byte[]
+    env->SetByteArrayRegion(data, 0, size, (jbyte*)d);                //数据拷贝到data中
+    onProgress(THREAD_MAIN,data);
+    env->DeleteLocalRef(data);
+}
+

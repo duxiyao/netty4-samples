@@ -137,7 +137,10 @@ public class HelloJni {
 
     // native层传递上来的 进度值
     public void onProgress(byte[] data) {
-        new HelloJni2().log("cb onProgress1 " + data[0] + "  " + data[1]);
+//        new HelloJni2().log("cb onProgress1 " + data[0] + "  " + data[1]);
+//        new HelloJni2().log("cb onProgress1 "+data.length );
+        System.out.println("cb onProgress1 "+data.length );
+        String s="";
     }
 
     public void onProgress(ByteBuffer byteBuffer) {
