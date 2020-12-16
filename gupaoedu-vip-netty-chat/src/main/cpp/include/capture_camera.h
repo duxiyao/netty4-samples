@@ -14,11 +14,16 @@ public:
     ~CaptureHelper();
 
     void onGet264Data(int size,uint8_t *data);
+
+    void calcStart();
+    void calcEnd();
 private:
     JavaVM *javaVM;
     JNIEnv *env;
     jobject instance;
     jmethodID jmd_on_get_data;
+    jmethodID jmd_on_calc_start;
+    jmethodID jmd_on_calc_end;
 
 
 };

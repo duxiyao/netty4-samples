@@ -109,7 +109,7 @@ static void encode(AVCodecContext *enc_ctx, AVFrame * &frame, AVPacket *pkt,
         // printf("Write packet %3"PRId64" (size=%5d)\n", pkt->pts, pkt->size);
 //        printf("pre4data is %d %d %d %d \n", pkt->data[0],pkt->data[1],pkt->data[2],pkt->data[3]);
 
-//        fwrite(pkt->data, 1, pkt->size, outfile);
+        fwrite(pkt->data, 1, pkt->size, outfile);
         helper->onGet264Data(pkt->size,pkt->data);
 
         av_packet_unref(pkt);
@@ -145,8 +145,10 @@ static void decodeandencode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *p
         // pgm_save(frame->data[0], frame->linesize[0],
         //          frame->width, frame->height, buf);
 
-    	AVFrame *dstFrame=create_frame(V_WIDTH,V_HEIGTH);
+//        printf("pre4data is %d %d %d %d \n", frame->data[0][0],frame->data[0][1],frame->data[0][2],frame->data[0][3]);
 
+        helper->calcEnd();
+    	AVFrame *dstFrame=create_frame(V_WIDTH,V_HEIGTH);
         sws_scale(img_convert_ctx, (const uint8_t * const*)frame->data,
                   frame->linesize, 0, dec_ctx->height, dstFrame->data, dstFrame->linesize);
         dstFrame->pts=frame->pts++;
@@ -303,7 +305,7 @@ static int open_decode(AVFormatContext	*pFormatCtx,int *videoindex
     }
     pDecodeCodecCtx=avcodec_alloc_context3(pDecodeCodec);
     avcodec_parameters_to_context(pDecodeCodecCtx, pCodecParameters); //初始化AVCodecContext
-
+    pDecodeCodecCtx->gop_size=0;
     if(avcodec_open2(pDecodeCodecCtx, pDecodeCodec,NULL)<0)
     {
     	printf("Could not open decoder codec.\n");
@@ -332,7 +334,7 @@ static int open_encode(AVCodec *pCodec,AVCodecContext * &pCodecCtx,AVCodecContex
     /* resolution must be a multiple of two */
     pCodecCtx->width = pDecodeCodecCtx->width;
     pCodecCtx->height = pDecodeCodecCtx->height;
-    printf("width:%d height:%d.\n",pDecodeCodecCtx->width,pDecodeCodecCtx->height);
+//    printf("width:%d height:%d.\n",pDecodeCodecCtx->width,pDecodeCodecCtx->height);
 
     /* frames per second */
     pCodecCtx->time_base = (AVRational){1, 30};
@@ -343,15 +345,17 @@ static int open_encode(AVCodec *pCodec,AVCodecContext * &pCodecCtx,AVCodecContex
      * then gop_size is ignored and the output of encoder
      * will always be I frame irrespective to gop_size
      */
-    pCodecCtx->gop_size = pDecodeCodecCtx->gop_size;
-    pCodecCtx->max_b_frames = pDecodeCodecCtx->max_b_frames;
-    printf("pCodecCtx->gop_size:%d pCodecCtx->max_b_frames:%d.\n",pCodecCtx->gop_size,pCodecCtx->max_b_frames);
+//    pCodecCtx->gop_size = pDecodeCodecCtx->gop_size;
+//    pCodecCtx->max_b_frames = pDecodeCodecCtx->max_b_frames;
+    pCodecCtx->gop_size = 12;
+    pCodecCtx->max_b_frames = 0;
+//    printf("pCodecCtx->gop_size:%d pCodecCtx->max_b_frames:%d.\n",pCodecCtx->gop_size,pCodecCtx->max_b_frames);
     pCodecCtx->pix_fmt =  AV_PIX_FMT_YUV420P;
     if (pCodec->id == AV_CODEC_ID_H264){
         //https://www.jianshu.com/p/b46a33dd958d  刚开始preset是slow，导致播放跟快进似的
-        av_opt_set(pCodecCtx->priv_data, "preset", "ultrafast", 0);
+//        av_opt_set(pCodecCtx->priv_data, "preset", "ultrafast", 0);
+        av_opt_set(pCodecCtx->priv_data, "preset", "slow", 0);
         av_opt_set(pCodecCtx->priv_data, "tune", "zerolatency", 0);
-    	// av_dict_set(pCodecCtx->priv_data, "tune", "zerolatency", 0);
     }
     if(pCodec->id == AV_CODEC_ID_H265){
         av_opt_set(pCodecCtx->priv_data, "x265-params", "qp=20", 0);
@@ -419,8 +423,11 @@ int capture()
 //        			if(frame_count>=100){
 //        				break;
 //        			}
+
+        helper->calcStart();
         		//采集摄像头数据以及编解码，需要分开线程处理。因为若采集 后者 编码 互相占用时间，会影响真实的帧率，会导致播放时候像是在快进
             	decodeandencode(pDecodeCodecCtx, pFrame, packet,test264,pCodecCtx,encodedPkt,img_convert_ctx);
+
     		}
     		av_packet_unref(packet);
     	}else{
@@ -440,6 +447,7 @@ int capture()
     /* add sequence end code to have a real MPEG file */
 //    uint8_t endcode[] = { 0, 0, 1, 0xb7 };
 //    fwrite(endcode, 1, sizeof(endcode), test264);
+
     fclose(test264);
     avcodec_free_context(&pCodecCtx);
     avcodec_free_context(&pDecodeCodecCtx);
@@ -466,6 +474,8 @@ CaptureHelper::CaptureHelper(JavaVM *javaVM_, JNIEnv *env_, jobject instance_){
 //    cd 进入 class所在的目录 执行： javap -s 全限定名,查看输出的 descriptor
 //    xx\app\build\intermediates\classes\debug>javap -s com.netease.jnitest.Helper
     jmd_on_get_data = env->GetMethodID(clazz, "onGetData", "([B)V");
+    jmd_on_calc_start = env->GetMethodID(clazz, "onCalcStart", "()V");
+    jmd_on_calc_end = env->GetMethodID(clazz, "onCalcEnd", "()V");
 }
 
 CaptureHelper::~CaptureHelper(){
@@ -481,4 +491,11 @@ void CaptureHelper::onGet264Data(int size,uint8_t *d){
     env->CallVoidMethod(instance, jmd_on_get_data, data);
 
     env->DeleteLocalRef(data);
+}
+
+void CaptureHelper::calcEnd(){
+    env->CallVoidMethod(instance, jmd_on_calc_end);
+}
+void CaptureHelper::calcStart(){
+    env->CallVoidMethod(instance, jmd_on_calc_start);
 }
