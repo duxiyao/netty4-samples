@@ -4,6 +4,8 @@
 #include <capture_camera.h>
 #include <jni_init.h>
 #include <com_ffmpeg_CaptureCamera.h>
+#include <threadsafe_queue.h>
+#include <thread>
 
 #define __STDC_CONSTANT_MACROS
 
@@ -45,6 +47,7 @@ extern "C"
 #define PX_FMT "uyvy422"
 
 static CaptureHelper *helper =0;
+static threadsafe_queue<AVFrame*> queue;
 
 static AVFrame* create_frame(int width, int height){
 
@@ -109,7 +112,7 @@ static void encode(AVCodecContext *enc_ctx, AVFrame * &frame, AVPacket *pkt,
         // printf("Write packet %3"PRId64" (size=%5d)\n", pkt->pts, pkt->size);
 //        printf("pre4data is %d %d %d %d \n", pkt->data[0],pkt->data[1],pkt->data[2],pkt->data[3]);
 
-        fwrite(pkt->data, 1, pkt->size, outfile);
+//        fwrite(pkt->data, 1, pkt->size, outfile);
         helper->onGet264Data(pkt->size,pkt->data);
 
         av_packet_unref(pkt);
@@ -147,14 +150,18 @@ static void decodeandencode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *p
 
 //        printf("pre4data is %d %d %d %d \n", frame->data[0][0],frame->data[0][1],frame->data[0][2],frame->data[0][3]);
 
-        helper->calcEnd();
     	AVFrame *dstFrame=create_frame(V_WIDTH,V_HEIGTH);
         sws_scale(img_convert_ctx, (const uint8_t * const*)frame->data,
                   frame->linesize, 0, dec_ctx->height, dstFrame->data, dstFrame->linesize);
         dstFrame->pts=frame->pts++;
 //        dstFrame->pts=frame_count;
          /* encode the image */
+
+        //todo
+//        queue.push(dstFrame);
+        helper->calcStart();
 		encode(enc_ctx, dstFrame, encodedPkt, test264);
+        helper->calcEnd();
     }
 }
 
@@ -424,7 +431,6 @@ int capture()
 //        				break;
 //        			}
 
-        helper->calcStart();
         		//采集摄像头数据以及编解码，需要分开线程处理。因为若采集 后者 编码 互相占用时间，会影响真实的帧率，会导致播放时候像是在快进
             	decodeandencode(pDecodeCodecCtx, pFrame, packet,test264,pCodecCtx,encodedPkt,img_convert_ctx);
 

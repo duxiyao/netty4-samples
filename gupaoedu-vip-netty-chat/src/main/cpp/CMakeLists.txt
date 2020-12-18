@@ -10,6 +10,8 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ../../jniLib/)
 MESSAGE(STATUS "HOME dir:$ENV{HOME}")
 MESSAGE(STATUS "JAVA_HOME dir:$ENV{JAVA_HOME}")
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11") # set C++ 11
+
 #找到包含的所有cpp文件,不包含.h文件
 file(GLOB allCpp *.cpp)
 #file(GLOB allC *.c)
@@ -85,6 +87,7 @@ set_target_properties(swscale
 #最后开始链接库
 target_link_libraries(
         myffmpeg
+        pthread
         avformat
         avcodec
         avutil
