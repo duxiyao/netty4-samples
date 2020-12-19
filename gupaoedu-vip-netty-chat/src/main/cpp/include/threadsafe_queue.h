@@ -1,6 +1,7 @@
 /**
 https://blog.csdn.net/liuxuejiang158blog/article/details/17301739
 */
+#include <stdio.h>
 #include <queue>
 #include <memory>
 #include <mutex>
@@ -62,6 +63,18 @@ class threadsafe_queue
      bool empty() const
      {
          std::lock_guard<std::mutex> lk(mut);
+         return data_queue.empty();
+     }
+     bool clear()
+     {
+         std::lock_guard<std::mutex> lk(mut);
+         std::queue<T> empty;
+         swap(empty, data_queue);
+//         while (!data_queue.empty())
+//         {
+//           data_queue.front();
+//           data_queue.pop();
+//         }
          return data_queue.empty();
      }
      int size()

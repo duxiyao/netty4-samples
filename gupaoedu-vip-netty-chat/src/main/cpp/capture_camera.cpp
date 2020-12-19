@@ -47,6 +47,7 @@ extern "C"
 #define V_WH "1280x720"
 #define PX_FMT "uyvy422"
 
+static int calccount =0;
 static CaptureHelper *helper =0;
 static threadsafe_queue<AVFrame*> safeq;
 
@@ -88,9 +89,9 @@ __ERROR:
 static void encode(AVCodecContext *enc_ctx, AVPacket *pkt,
                    FILE *outfile)
 {
-    fprintf(stderr, "safeq.size:%d\n", safeq.size());
     AVFrame *frame=0;
     safeq.wait_and_pop(frame);
+    fprintf(stderr, "encode safeq.size:%d\n", safeq.size());
     int ret;
     /* send the frame to the encoder */
     // if (frame)
@@ -167,11 +168,17 @@ static void decodeandencode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *p
     	AVFrame *dstFrame=create_frame(V_WIDTH,V_HEIGTH);
         sws_scale(img_convert_ctx, (const uint8_t * const*)frame->data,
                   frame->linesize, 0, dec_ctx->height, dstFrame->data, dstFrame->linesize);
-        dstFrame->pts=frame->pts++;
-//        dstFrame->pts=frame_count;
+//        dstFrame->pts=frame->pts++;  用这种方式硬编时候会有问题，软编没问题
+        dstFrame->pts=calccount;
          /* encode the image */
 
-        safeq.push(dstFrame);
+            safeq.push(dstFrame);
+          //todo 软编的时候，跳帧发送，会降低延迟，但是还有延迟。
+//        if(calccount%5==0){
+//            safeq.push(dstFrame);
+//            fprintf(stderr, "dencode safeq.size:%d\n", safeq.size());
+//        }
+        calccount++;
     }
 }
 
@@ -338,7 +345,10 @@ static int open_decode(AVFormatContext	*pFormatCtx,int *videoindex
 }
 
 static int open_encode(AVCodec *pCodec,AVCodecContext * &pCodecCtx,AVCodecContext	*pDecodeCodecCtx){
-    pCodec=avcodec_find_encoder_by_name("libx264");
+//硬编时候，数据写入文件然后播放是正常的，网络发出去是对方是花的；软编的时候写入文件网络发送都正常。原因是pts的问题
+    pCodec=avcodec_find_encoder_by_name("h264_videotoolbox");//mac  264 硬编码
+//    pCodec=avcodec_find_encoder_by_name("hevc_videotoolbox");//mac 265硬编码
+//    pCodec=avcodec_find_encoder_by_name("libx264");
 //    pCodec=avcodec_find_encoder_by_name("libx265");
     pCodecCtx=avcodec_alloc_context3(pCodec);
     if(pCodec==NULL)
@@ -362,16 +372,15 @@ static int open_encode(AVCodec *pCodec,AVCodecContext * &pCodecCtx,AVCodecContex
      * then gop_size is ignored and the output of encoder
      * will always be I frame irrespective to gop_size
      */
-//    pCodecCtx->gop_size = pDecodeCodecCtx->gop_size;
-//    pCodecCtx->max_b_frames = pDecodeCodecCtx->max_b_frames;
     pCodecCtx->gop_size = 12;
     pCodecCtx->max_b_frames = 0;
 //    printf("pCodecCtx->gop_size:%d pCodecCtx->max_b_frames:%d.\n",pCodecCtx->gop_size,pCodecCtx->max_b_frames);
-    pCodecCtx->pix_fmt =  AV_PIX_FMT_YUV420P;
+    pCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;
     if (pCodec->id == AV_CODEC_ID_H264){
+        //硬编时候感觉这个参数不起作用
         //https://www.jianshu.com/p/b46a33dd958d  刚开始preset是slow，导致播放跟快进似的
-        av_opt_set(pCodecCtx->priv_data, "preset", "ultrafast", 0);
-//        av_opt_set(pCodecCtx->priv_data, "preset", "slow", 0);
+//        av_opt_set(pCodecCtx->priv_data, "preset", "ultrafast", 0);
+        av_opt_set(pCodecCtx->priv_data, "preset", "slow", 0);
         av_opt_set(pCodecCtx->priv_data, "tune", "zerolatency", 0);
     }
     if(pCodec->id == AV_CODEC_ID_H265){
