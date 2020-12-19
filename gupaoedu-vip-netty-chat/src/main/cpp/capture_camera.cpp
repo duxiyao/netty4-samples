@@ -370,8 +370,8 @@ static int open_encode(AVCodec *pCodec,AVCodecContext * &pCodecCtx,AVCodecContex
     pCodecCtx->pix_fmt =  AV_PIX_FMT_YUV420P;
     if (pCodec->id == AV_CODEC_ID_H264){
         //https://www.jianshu.com/p/b46a33dd958d  刚开始preset是slow，导致播放跟快进似的
-//        av_opt_set(pCodecCtx->priv_data, "preset", "ultrafast", 0);
-        av_opt_set(pCodecCtx->priv_data, "preset", "slow", 0);
+        av_opt_set(pCodecCtx->priv_data, "preset", "ultrafast", 0);
+//        av_opt_set(pCodecCtx->priv_data, "preset", "slow", 0);
         av_opt_set(pCodecCtx->priv_data, "tune", "zerolatency", 0);
     }
     if(pCodec->id == AV_CODEC_ID_H265){
@@ -432,10 +432,10 @@ int capture()
 
 	thread tencode(ftencode,pCodecCtx,encodedPkt,test264);
 	tencode.detach();
-	thread tencode1(ftencode,pCodecCtx,encodedPkt,test264);
-	tencode1.detach();
-	thread tencode2(ftencode,pCodecCtx,encodedPkt,test264);
-	tencode2.detach();
+//	thread tencode1(ftencode,pCodecCtx,encodedPkt,test264);
+//	tencode1.detach();
+//	thread tencode2(ftencode,pCodecCtx,encodedPkt,test264);
+//	tencode2.detach();
 
     int frame_count=0;
     //采集摄像头数据以及编解码，需要分开线程处理。因为若采集 后者 编码 互相占用时间，会影响真实的帧率，会导致播放时候像是在快进
