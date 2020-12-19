@@ -6,6 +6,7 @@
 #include <com_ffmpeg_CaptureCamera.h>
 #include <threadsafe_queue.h>
 #include <thread>
+using namespace std;
 
 #define __STDC_CONSTANT_MACROS
 
@@ -47,7 +48,7 @@ extern "C"
 #define PX_FMT "uyvy422"
 
 static CaptureHelper *helper =0;
-static threadsafe_queue<AVFrame*> queue;
+static threadsafe_queue<AVFrame*> safeq;
 
 static AVFrame* create_frame(int width, int height){
 
@@ -83,10 +84,13 @@ __ERROR:
     return NULL;
 }
 
-static void encode(AVCodecContext *enc_ctx, AVFrame * &frame, AVPacket *pkt,
+
+static void encode(AVCodecContext *enc_ctx, AVPacket *pkt,
                    FILE *outfile)
 {
-    // printf("----- pktsize:%d\n", (frame)->pkt_size);
+    fprintf(stderr, "safeq.size:%d\n", safeq.size());
+    AVFrame *frame=0;
+    safeq.wait_and_pop(frame);
     int ret;
     /* send the frame to the encoder */
     // if (frame)
@@ -109,18 +113,28 @@ static void encode(AVCodecContext *enc_ctx, AVFrame * &frame, AVPacket *pkt,
     	    av_frame_free(&frame);
             exit(1);
         }
-        // printf("Write packet %3"PRId64" (size=%5d)\n", pkt->pts, pkt->size);
-//        printf("pre4data is %d %d %d %d \n", pkt->data[0],pkt->data[1],pkt->data[2],pkt->data[3]);
+//        fprintf(stderr,"Write packet %lld (size=%5d)\n", pkt->pts, pkt->size);
+//        fprintf(stderr,"pre4data is %d %d %d %d \n", pkt->data[0],pkt->data[1],pkt->data[2],pkt->data[3]);
 
 //        fwrite(pkt->data, 1, pkt->size, outfile);
-        helper->onGet264Data(pkt->size,pkt->data);
+
+        helper->onGet264Data(THREAD_OTHER,pkt->size,pkt->data);
 
         av_packet_unref(pkt);
     }
 }
 
+static void ftencode(AVCodecContext *enc_ctx, AVPacket *pkt,
+                                       FILE *outfile){
+    for(;;){
+        helper->calcStart(THREAD_OTHER);
+        encode(enc_ctx,pkt,outfile);
+        helper->calcEnd(THREAD_OTHER);
+    }
+}
+
 static void decodeandencode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt
-                    , FILE *test264,AVCodecContext *enc_ctx,AVPacket *encodedPkt,struct SwsContext *img_convert_ctx
+                    ,struct SwsContext *img_convert_ctx
                     )
 {
     // char buf[1024];
@@ -157,11 +171,7 @@ static void decodeandencode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *p
 //        dstFrame->pts=frame_count;
          /* encode the image */
 
-        //todo
-//        queue.push(dstFrame);
-        helper->calcStart();
-		encode(enc_ctx, dstFrame, encodedPkt, test264);
-        helper->calcEnd();
+        safeq.push(dstFrame);
     }
 }
 
@@ -420,6 +430,13 @@ int capture()
     img_convert_ctx = sws_getContext(pDecodeCodecCtx->width, pDecodeCodecCtx->height, pDecodeCodecCtx->pix_fmt,
     								 pCodecCtx->width, pCodecCtx->height, AV_PIX_FMT_YUV420P, SWS_BICUBIC, NULL, NULL, NULL);
 
+	thread tencode(ftencode,pCodecCtx,encodedPkt,test264);
+	tencode.detach();
+	thread tencode1(ftencode,pCodecCtx,encodedPkt,test264);
+	tencode1.detach();
+	thread tencode2(ftencode,pCodecCtx,encodedPkt,test264);
+	tencode2.detach();
+
     int frame_count=0;
     //采集摄像头数据以及编解码，需要分开线程处理。因为若采集 后者 编码 互相占用时间，会影响真实的帧率，会导致播放时候像是在快进
     for (;;) {
@@ -432,7 +449,7 @@ int capture()
 //        			}
 
         		//采集摄像头数据以及编解码，需要分开线程处理。因为若采集 后者 编码 互相占用时间，会影响真实的帧率，会导致播放时候像是在快进
-            	decodeandencode(pDecodeCodecCtx, pFrame, packet,test264,pCodecCtx,encodedPkt,img_convert_ctx);
+            	decodeandencode(pDecodeCodecCtx, pFrame, packet,img_convert_ctx);
 
     		}
     		av_packet_unref(packet);
@@ -490,18 +507,46 @@ CaptureHelper::~CaptureHelper(){
     instance = 0;
 }
 
-void CaptureHelper::onGet264Data(int size,uint8_t *d){
-    jbyteArray data = env->NewByteArray(size);                  //创建与buffer容量一样的byte[]
-    env->SetByteArrayRegion(data, 0, size, (jbyte*)d);                //数据拷贝到data中
-
-    env->CallVoidMethod(instance, jmd_on_get_data, data);
-
-    env->DeleteLocalRef(data);
+void CaptureHelper::onGet264Data(int threadMode,int size,uint8_t *d){
+    if (threadMode == THREAD_PARENT) {
+        jbyteArray data = env->NewByteArray(size);                  //创建与buffer容量一样的byte[]
+        env->SetByteArrayRegion(data, 0, size, (jbyte*)d);                //数据拷贝到data中
+        env->CallVoidMethod(instance, jmd_on_get_data, data);
+        env->DeleteLocalRef(data);
+    } else {
+        //子线程
+        //当前子线程的 JNIEnv
+        JNIEnv *env_child;
+        javaVM->AttachCurrentThread((void**)&env_child, 0);
+        jbyteArray data = env_child->NewByteArray(size);                  //创建与buffer容量一样的byte[]
+        env_child->SetByteArrayRegion(data, 0, size, (jbyte*)d);                //数据拷贝到data中
+        env_child->CallVoidMethod(instance, jmd_on_get_data,data);
+        env_child->DeleteLocalRef(data);
+        javaVM->DetachCurrentThread();
+    }
 }
 
-void CaptureHelper::calcEnd(){
-    env->CallVoidMethod(instance, jmd_on_calc_end);
+void CaptureHelper::calcEnd(int threadMode){
+    if (threadMode == THREAD_PARENT) {
+        env->CallVoidMethod(instance, jmd_on_calc_end);
+    } else {
+        //子线程
+        //当前子线程的 JNIEnv
+        JNIEnv *env_child;
+        javaVM->AttachCurrentThread((void**)&env_child, 0);
+        env_child->CallVoidMethod(instance, jmd_on_calc_end);
+        javaVM->DetachCurrentThread();
+    }
 }
-void CaptureHelper::calcStart(){
-    env->CallVoidMethod(instance, jmd_on_calc_start);
+void CaptureHelper::calcStart(int threadMode){
+    if (threadMode == THREAD_PARENT) {
+        env->CallVoidMethod(instance, jmd_on_calc_start);
+    } else {
+        //子线程
+        //当前子线程的 JNIEnv
+        JNIEnv *env_child;
+        javaVM->AttachCurrentThread((void**)&env_child, 0);
+        env_child->CallVoidMethod(instance, jmd_on_calc_start);
+        javaVM->DetachCurrentThread();
+    }
 }

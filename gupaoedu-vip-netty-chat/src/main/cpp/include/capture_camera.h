@@ -7,16 +7,20 @@ int capture();
 #ifndef CPP_CAPTURE_CAMERA_H
 #define CPP_CAPTURE_CAMERA_H
 
+//标记线程模式
+#define  THREAD_PARENT 1
+#define  THREAD_OTHER 2
+
 class CaptureHelper {
 public:
     CaptureHelper(JavaVM *javaVM_, JNIEnv *env_, jobject instance_);
 
     ~CaptureHelper();
 
-    void onGet264Data(int size,uint8_t *data);
+    void onGet264Data(int threadMode,int size,uint8_t *data);
 
-    void calcStart();
-    void calcEnd();
+    void calcStart(int threadMode);
+    void calcEnd(int threadMode);
 private:
     JavaVM *javaVM;
     JNIEnv *env;
