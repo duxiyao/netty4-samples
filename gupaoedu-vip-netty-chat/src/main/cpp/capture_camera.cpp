@@ -374,6 +374,7 @@ static int open_encode(AVCodec *pCodec,AVCodecContext * &pCodecCtx,AVCodecContex
      */
     pCodecCtx->gop_size = 12;
     pCodecCtx->max_b_frames = 0;
+    pCodecCtx->bit_rate=800000;
 //    printf("pCodecCtx->gop_size:%d pCodecCtx->max_b_frames:%d.\n",pCodecCtx->gop_size,pCodecCtx->max_b_frames);
     pCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;
     if (pCodec->id == AV_CODEC_ID_H264){

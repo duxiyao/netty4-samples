@@ -46,7 +46,7 @@ public class CaptureCamera {
             jsonObject.put("mimeType", "video/avc");
             jsonObject.put("videoWidth", 1280);
             jsonObject.put("videoHeight", 720);
-//            jsonObject.put("keyBitRate", 800*1000);
+            jsonObject.put("keyBitRate", 800*1000);
             jsonObject.put("fps", 30);
 //            jsonObject.put("iFrameInterval", 1);
             String json = jsonObject.toString();
