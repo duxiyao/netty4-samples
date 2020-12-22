@@ -8,8 +8,10 @@ import java.net.InetSocketAddress;
 public class Test {
 
     public static void main(String[] args) throws Exception {
-        InetSocketAddress test;
-        test = stun.getPublicAddress(40446);
-        System.out.println("STUN: " + test.toString());
+//        InetSocketAddress test;
+//        test = stun.getPublicAddress(40446);
+//        System.out.println("STUN: " + test.toString());
+        //-Xmx256m
+        System.out.println(Runtime.getRuntime().maxMemory()/(1024*1024)+"");
     }
 }
