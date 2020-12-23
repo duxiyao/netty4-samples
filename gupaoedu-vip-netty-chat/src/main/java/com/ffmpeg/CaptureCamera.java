@@ -41,19 +41,21 @@ public class CaptureCamera {
     public static void main(String[] args) {
 //        System.out.println("start-----------"+Thread.currentThread().getName());
         JSONObject jsonObject = new JSONObject();
-        IMSdk.getInstance().init(uid, null, () -> {
-
-            jsonObject.put("mimeType", "video/avc");
-            jsonObject.put("videoWidth", 1280);
-            jsonObject.put("videoHeight", 720);
-            jsonObject.put("keyBitRate", 800*1000);
-            jsonObject.put("fps", 30);
+        jsonObject.put("mimeType", "video/avc");
+        jsonObject.put("videoWidth", 1920);
+        jsonObject.put("videoHeight", 1080);
+//        jsonObject.put("videoWidth", 1280);
+//        jsonObject.put("videoHeight", 720);
+        jsonObject.put("keyBitRate", 800*1000);
+        jsonObject.put("fps", 30);
 //            jsonObject.put("iFrameInterval", 1);
-            String json = jsonObject.toString();
-            System.out.println(json);
+        final String json = jsonObject.toString();
+
+        System.out.println(json);
+        IMSdk.getInstance().init(uid, null, () -> {
             IMSdk.getInstance().getChat().sendTransparentTxt(toUid, json);
             new Thread(() -> {
-//                System.out.println("start capture-----------"+Thread.currentThread().getName());
+                System.out.println("start capture-----------"+Thread.currentThread().getName());
                 new CaptureCamera().startCapture();
             }).start();
         });

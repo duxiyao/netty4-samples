@@ -41,10 +41,15 @@ extern "C"
 //'1' Use Dshow
 //'0' Use VFW
 #define USE_DSHOW 0
-#define V_WIDTH 1280
-#define V_HEIGTH 720
 #define FPS "30"
+//#define V_WIDTH 1280
+//#define V_HEIGTH 720
+#define V_WIDTH 1920
+#define V_HEIGTH 1080
 #define V_WH "1280x720"
+//#define V_WIDTH 2880
+//#define V_HEIGTH 1800
+//#define V_WH "2880x1800"
 #define PX_FMT "uyvy422"
 
 static int calccount =0;
@@ -165,6 +170,7 @@ static void decodeandencode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *p
 
 //        printf("pre4data is %d %d %d %d \n", frame->data[0][0],frame->data[0][1],frame->data[0][2],frame->data[0][3]);
 
+        printf("avcodec_receive_frame success.\n");
     	AVFrame *dstFrame=create_frame(V_WIDTH,V_HEIGTH);
         sws_scale(img_convert_ctx, (const uint8_t * const*)frame->data,
                   frame->linesize, 0, dec_ctx->height, dstFrame->data, dstFrame->linesize);
@@ -172,7 +178,8 @@ static void decodeandencode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *p
         dstFrame->pts=calccount;
          /* encode the image */
 
-            safeq.push(dstFrame);
+         safeq.push(dstFrame);
+        printf("push frame to safeq success.\n");
           //todo 软编的时候，跳帧发送，会降低延迟，但是还有延迟。
 //        if(calccount%5==0){
 //            safeq.push(dstFrame);
@@ -236,7 +243,9 @@ static int mac_open_input(AVFormatContext * pFormatCtx){
     AVInputFormat *ifmt=av_find_input_format("avfoundation");
     //Avfoundation
     //[video]:[audio]
-    if(avformat_open_input(&pFormatCtx,"0",ifmt, &options)!=0){
+//    if(avformat_open_input(&pFormatCtx,"FaceTime HD Camera",ifmt, &options)!=0){
+//    if(avformat_open_input(&pFormatCtx,"0",ifmt, &options)!=0){
+    if(avformat_open_input(&pFormatCtx,"Capture screen 1",ifmt, &options)!=0){
         printf("Couldn't open input stream.\n");
         return -1;
     }
@@ -330,6 +339,7 @@ static int open_decode(AVFormatContext	*pFormatCtx,int *videoindex
     pDecodeCodecCtx=avcodec_alloc_context3(pDecodeCodec);
     avcodec_parameters_to_context(pDecodeCodecCtx, pCodecParameters); //初始化AVCodecContext
     pDecodeCodecCtx->gop_size=0;
+    pDecodeCodecCtx->thread_count=8;
     if(avcodec_open2(pDecodeCodecCtx, pDecodeCodec,NULL)<0)
     {
     	printf("Could not open decoder codec.\n");
@@ -346,9 +356,9 @@ static int open_decode(AVFormatContext	*pFormatCtx,int *videoindex
 
 static int open_encode(AVCodec *pCodec,AVCodecContext * &pCodecCtx,AVCodecContext	*pDecodeCodecCtx){
 //硬编时候，数据写入文件然后播放是正常的，网络发出去是对方是花的；软编的时候写入文件网络发送都正常。原因是pts的问题
-    pCodec=avcodec_find_encoder_by_name("h264_videotoolbox");//mac  264 硬编码
+//    pCodec=avcodec_find_encoder_by_name("h264_videotoolbox");//mac  264 硬编码
 //    pCodec=avcodec_find_encoder_by_name("hevc_videotoolbox");//mac 265硬编码
-//    pCodec=avcodec_find_encoder_by_name("libx264");
+    pCodec=avcodec_find_encoder_by_name("libx264");
 //    pCodec=avcodec_find_encoder_by_name("libx265");
     pCodecCtx=avcodec_alloc_context3(pCodec);
     if(pCodec==NULL)
@@ -356,6 +366,7 @@ static int open_encode(AVCodec *pCodec,AVCodecContext * &pCodecCtx,AVCodecContex
     	printf("Codec not found.\n");
     	return -1;
     }
+    pCodecCtx->thread_count=8;
      /* put sample parameters */
 //    pCodecCtx->bit_rate = pDecodeCodecCtx->bit_rate;
     /* resolution must be a multiple of two */
@@ -423,12 +434,14 @@ int capture()
        printf("open_decode failer.\n");
        return ret;
     }
+    printf("open_decode success.\n");
 
     ret = open_encode(pCodec,pCodecCtx,pDecodeCodecCtx);
     if(ret==-1){
         printf("open_encode failer.\n");
         return ret;
     }
+    printf("open_encode success.\n");
 
     AVFrame	*pFrame=av_frame_alloc();
     AVPacket *packet=(AVPacket *)av_malloc(sizeof(AVPacket));
@@ -447,6 +460,7 @@ int capture()
 //	thread tencode2(ftencode,pCodecCtx,encodedPkt,test264);
 //	tencode2.detach();
 
+    printf("start capture.\n");
     int frame_count=0;
     //采集摄像头数据以及编解码，需要分开线程处理。因为若采集 后者 编码 互相占用时间，会影响真实的帧率，会导致播放时候像是在快进
     for (;;) {

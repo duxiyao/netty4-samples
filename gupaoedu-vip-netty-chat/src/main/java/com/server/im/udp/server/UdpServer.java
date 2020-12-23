@@ -72,3 +72,8 @@ public class UdpServer {
     }
 
 }
+/**
+ mac 查找端口占用
+ lsof -i:8888
+ 找到pid  kill pid
+ */
