@@ -96,7 +96,9 @@ static void encode(AVCodecContext *enc_ctx, AVPacket *pkt,
 {
     AVFrame *frame=0;
     safeq.wait_and_pop(frame);
-    fprintf(stderr, "encode safeq.size:%d\n", safeq.size());
+    if(safeq.size()>0){
+        fprintf(stderr, "encode safeq.size:%d\n", safeq.size());
+    }
     int ret;
     /* send the frame to the encoder */
     // if (frame)
@@ -133,9 +135,9 @@ static void encode(AVCodecContext *enc_ctx, AVPacket *pkt,
 static void ftencode(AVCodecContext *enc_ctx, AVPacket *pkt,
                                        FILE *outfile){
     for(;;){
-        helper->calcStart(THREAD_OTHER);
+//        helper->calcStart(THREAD_OTHER);
         encode(enc_ctx,pkt,outfile);
-        helper->calcEnd(THREAD_OTHER);
+//        helper->calcEnd(THREAD_OTHER);
     }
 }
 
@@ -170,7 +172,7 @@ static void decodeandencode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *p
 
 //        printf("pre4data is %d %d %d %d \n", frame->data[0][0],frame->data[0][1],frame->data[0][2],frame->data[0][3]);
 
-        printf("avcodec_receive_frame success.\n");
+//        printf("avcodec_receive_frame success.\n");
     	AVFrame *dstFrame=create_frame(V_WIDTH,V_HEIGTH);
         sws_scale(img_convert_ctx, (const uint8_t * const*)frame->data,
                   frame->linesize, 0, dec_ctx->height, dstFrame->data, dstFrame->linesize);
@@ -179,7 +181,7 @@ static void decodeandencode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *p
          /* encode the image */
 
          safeq.push(dstFrame);
-        printf("push frame to safeq success.\n");
+//        printf("push frame to safeq success.\n");
           //todo 软编的时候，跳帧发送，会降低延迟，但是还有延迟。
 //        if(calccount%5==0){
 //            safeq.push(dstFrame);
@@ -383,7 +385,7 @@ static int open_encode(AVCodec *pCodec,AVCodecContext * &pCodecCtx,AVCodecContex
      * then gop_size is ignored and the output of encoder
      * will always be I frame irrespective to gop_size
      */
-    pCodecCtx->gop_size = 12;
+    pCodecCtx->gop_size = 30;
     pCodecCtx->max_b_frames = 0;
     pCodecCtx->bit_rate=800000;
 //    printf("pCodecCtx->gop_size:%d pCodecCtx->max_b_frames:%d.\n",pCodecCtx->gop_size,pCodecCtx->max_b_frames);

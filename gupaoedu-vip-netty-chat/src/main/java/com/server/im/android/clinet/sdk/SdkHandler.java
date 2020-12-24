@@ -40,7 +40,7 @@ public class SdkHandler extends
         InetSocketAddress inetSocketAddress = msg.sender();
         ByteBuf byteBuf = msg.content();
         PkgInfo pkgInfo = PkgManager.decodeOne(byteBuf, pkgManager);
-        System.out.println("receive data of " + pkgInfo.getFrom() + " type=" + pkgInfo.getType());
+//        System.out.println("receive data of " + pkgInfo.getFrom() + " type=" + pkgInfo.getType());
 
         switch (pkgInfo.getType()) {
             case PkgInfo.TYPE_LOGIN:
@@ -86,7 +86,7 @@ public class SdkHandler extends
                         // : 2020/9/21  组装成功 回应
                         responsePkgAssembled(ctx, pkgInfo, inetSocketAddress);
                         PkgInfo data = pkgManager.get(pkgInfo.getPkgId());
-                        System.out.println("client---" + data.toString());
+//                        System.out.println("client---" + data.toString());
                         IMSdk.getInstance().onReceive(data);
                     } else {
                         //组装失败

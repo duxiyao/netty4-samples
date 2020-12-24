@@ -28,9 +28,14 @@ public class WholePkg {
             byteBuf.retain();
             return byteBuf;
         } catch (Exception e) {
-            e.printStackTrace();
+            // TODO: 2020/12/24
+//            e.printStackTrace();
         }
         return null;
+    }
+
+    public long getDelta(){
+        return System.currentTimeMillis()-initTime;
     }
 
 //    public void release() {

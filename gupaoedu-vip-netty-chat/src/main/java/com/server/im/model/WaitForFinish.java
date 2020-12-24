@@ -14,6 +14,7 @@ public class WaitForFinish {
     private ChannelHandlerContext ctx;
     private PkgInfo pkgInfo;
     private long initTime=System.currentTimeMillis();
+    private int cnt=0;
 
     public WaitForFinish(InetSocketAddress to, ChannelHandlerContext ctx, PkgInfo info) {
         this.to = to;
@@ -29,6 +30,10 @@ public class WaitForFinish {
     }
 
     public boolean send() {
+        cnt++;
+        if(cnt>=10){
+            return false;
+        }
         boolean flag = false;
         if (to == null || ctx == null || pkgInfo == null) {
             return flag;

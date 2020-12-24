@@ -21,11 +21,11 @@ public class PkgManager {
     //pkgid+cpkgn,单个pkginfo包
     private Map<String, AssemblePkg> pkgMap = new ConcurrentHashMap();
     private CopyOnWriteArrayList<WaitForFinish> waitfininsh = new CopyOnWriteArrayList<>();
-    private ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(1,1,0l,
-            TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>(10),
+    private ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(1, 1, 0l,
+            TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(10),
             new ThreadPoolExecutor.DiscardOldestPolicy());
 
-//            new ThreadPoolExecutor(1, 1, 0l,
+    //            new ThreadPoolExecutor(1, 1, 0l,
 //            TimeUnit.SECONDS, new LinkedBlockingDeque<>(10),new ThreadPoolExecutor.DiscardOldestPolicy());
     private volatile boolean check = true;
     private Consumer<WaitForFinish> pkgInfoConsumer;
@@ -48,7 +48,7 @@ public class PkgManager {
 
                                 if (pkgInfoConsumer != null) {
                                     if (waitfininsh.size() > 0) {
-                                        System.out.println(Thread.currentThread().getName() + "------foreach------" + waitfininsh.size());
+//                                        System.out.println(Thread.currentThread().getName() + "------foreach------" + waitfininsh.size());
                                         waitfininsh.forEach(pkgInfoConsumer);
                                     }
                                 }
@@ -245,14 +245,17 @@ public class PkgManager {
     public void removeWholePkg(String pkgId) {
 //        WholePkg wholePkg = wholePkgMap.get(pkgId);
 //        if (wholePkg != null) {
-//            wholePkg.release();
+////            wholePkg.release();
+//            System.out.println("send pkg stl is :" + wholePkg.getDelta());
 //        }
         wholePkgMap.remove(pkgId);
-        System.out.println( "---map.size="+wholePkgMap.size());
+        if (wholePkgMap.size() > 20) {
+            System.out.println("---map.size=" + wholePkgMap.size());
+        }
     }
 
-    private void checkWholePkgCnt(){
-        if(wholePkgMap.size()>10){
+    private void checkWholePkgCnt() {
+        if (wholePkgMap.size() > 10) {
             wholePkgMap.clear();
         }
     }

@@ -16,7 +16,7 @@ import java.util.function.Consumer;
 
 public class PkgManager {
 
-    public final static int MAX_ALIVE = 10;//缓存30秒
+    public final static int MAX_ALIVE = 30;//缓存30秒。最小不得少于10s
     //pkgid+cpkgn,单个pkginfo包
     private Map<String, AssemblePkg> pkgMap = new ConcurrentHashMap();
     private CopyOnWriteArrayList<WaitForFinish> waitfininsh = new CopyOnWriteArrayList<>();

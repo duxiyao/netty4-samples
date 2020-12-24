@@ -7,7 +7,7 @@ public class ClientInfo {
     private String userId;
     private InetSocketAddress inetSocketAddress;
     private String inetSocketAddressInfo;
-    private long idelTime;
+    private volatile long idelTime;
 
     public ClientInfo(String userId, InetSocketAddress inetSocketAddress, String inetSocketAddressInfo) {
         this.userId = userId;

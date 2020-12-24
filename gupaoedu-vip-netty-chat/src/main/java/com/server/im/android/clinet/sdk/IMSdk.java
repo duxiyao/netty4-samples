@@ -52,7 +52,7 @@ public class IMSdk {
         // : 2020/9/21 需要一直发送PkgInfo.TYPE_PKG_FINISH直到收到 PkgInfo.TYPE_PKG_RECEIVE_FINISH
         pkgManager.setPkgInfoConsumer((waitForFinish) -> {
             if (waitForFinish.send()) {
-                System.out.println("发送 waitForFinish.send()");
+//                System.out.println("发送 waitForFinish.send()");
             } else {
                 System.out.println("removeWaitForFinish(waitForFinish)");
                 pkgManager.removeWaitForFinish(waitForFinish);
