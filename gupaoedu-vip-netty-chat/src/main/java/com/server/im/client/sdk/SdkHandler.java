@@ -58,7 +58,9 @@ public class SdkHandler extends
                     }
                 }
                 if(addflag){
-                    pkgManager.addWaitForFinish(new WaitForFinish(null, ctx, pkgInfo));
+                    WaitForFinish temp=new WaitForFinish(null, ctx, pkgInfo);
+                    pkgManager.addWaitForFinish(temp);
+                    temp.send();
                 }
                 break;
             case PkgInfo.TYPE_PKG_RECEIVE_FINISH:
@@ -67,6 +69,12 @@ public class SdkHandler extends
                 pkgManager.removeWholePkg(pkgInfo.getPkgId());
                 break;
             case PkgInfo.TYPE_PKG_REMOVED:
+                pkgManager.removeWaitForFinish(new WaitForFinish(null, ctx, pkgInfo));
+                if(!pkgManager.assemblePkg(pkgInfo.getPkgId())) {
+                    pkgManager.removeWholePkg(pkgInfo.getPkgId());
+                    pkgManager.remove(pkgInfo.getPkgId());
+                }
+                break;
             case PkgInfo.TYPE_TARGET_OFFLINE:
                 pkgManager.removeWaitForFinish(new WaitForFinish(null, ctx, pkgInfo));
                 pkgManager.removeWholePkg(pkgInfo.getPkgId());

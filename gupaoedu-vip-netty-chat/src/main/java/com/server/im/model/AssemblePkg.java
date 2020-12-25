@@ -58,6 +58,13 @@ public class AssemblePkg {
         return pkgInfos.get(id + n);
     }
 
+    public boolean quickJudgeAssemble(){
+        if (completed != null) {
+            return true;
+        }
+        return false;
+    }
+
     /**
      * 组装包
      *

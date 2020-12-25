@@ -57,4 +57,14 @@ public class ClientInfo {
     public long getIdelTime(){
         return idelTime;
     }
+
+    @Override
+    public String toString() {
+        return "ClientInfo{" +
+                "userId='" + userId + '\'' +
+                ", inetSocketAddress=" + inetSocketAddress +
+                ", inetSocketAddressInfo='" + inetSocketAddressInfo + '\'' +
+                ", idelTime=" + idelTime +
+                '}';
+    }
 }

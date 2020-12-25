@@ -358,9 +358,9 @@ static int open_decode(AVFormatContext	*pFormatCtx,int *videoindex
 
 static int open_encode(AVCodec *pCodec,AVCodecContext * &pCodecCtx,AVCodecContext	*pDecodeCodecCtx){
 //硬编时候，数据写入文件然后播放是正常的，网络发出去是对方是花的；软编的时候写入文件网络发送都正常。原因是pts的问题
-//    pCodec=avcodec_find_encoder_by_name("h264_videotoolbox");//mac  264 硬编码
+    pCodec=avcodec_find_encoder_by_name("h264_videotoolbox");//mac  264 硬编码
 //    pCodec=avcodec_find_encoder_by_name("hevc_videotoolbox");//mac 265硬编码
-    pCodec=avcodec_find_encoder_by_name("libx264");
+//    pCodec=avcodec_find_encoder_by_name("libx264");
 //    pCodec=avcodec_find_encoder_by_name("libx265");
     pCodecCtx=avcodec_alloc_context3(pCodec);
     if(pCodec==NULL)

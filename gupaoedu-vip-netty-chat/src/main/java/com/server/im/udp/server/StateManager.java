@@ -80,4 +80,25 @@ public class StateManager {
             e.printStackTrace();
         }
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb=new StringBuilder();
+        sb.append("------------------\n");
+        set.forEach(s->{
+            sb.append("ips:"+s+"  ");
+        });
+        sb.append("\n");
+        clientInfoConcurrentHashMap.keySet().forEach(key->{
+            ClientInfo clientInfo=clientInfoConcurrentHashMap.get(key);
+            String scinfo="";
+            if(clientInfo!=null){
+                scinfo=clientInfo.toString();
+            }
+            sb.append("key:"+key+" value:"+scinfo);
+            sb.append("\n");
+        });
+        sb.append("------------------\n");
+        return sb.toString();
+    }
 }

@@ -63,9 +63,9 @@ public class CaptureCamera {
 //            }
 //        }
 
-        executorService.execute(() -> {
-            IMSdk.getInstance().getChat().sendVideo(toUid, data);
-        });
+//        executorService.execute(() -> {
+//            IMSdk.getInstance().getChat().sendVideo(toUid, data);
+//        });
     }
 
     public static void main(String[] args) {
@@ -80,29 +80,12 @@ public class CaptureCamera {
         jsonObject.put("fps", 30);
 //            jsonObject.put("iFrameInterval", 1);
         final String json = jsonObject.toString();
-
-        JSONObject ttl = new JSONObject();
-        ttl.put("msgType", "ttl");
-        final String ttljson = ttl.toString();
-        System.out.println(ttljson);
-
         System.out.println(json);
         IMSdk.getInstance().init(uid, null, () -> {
             IMSdk.getInstance().getChat().sendTransparentTxt(toUid, json);
-//            IMSdk.getInstance().getChat().sendTransparentTxt(toUid, ttljson);
-//            executorService.execute(() -> {
-//                for (int i = 0; i < 1000000; i++) {
-//                    try {
-//                        Thread.sleep(100);
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//                    IMSdk.getInstance().getChat().sendTransparentTxt(toUid, ttljson);
-//                }
-//            });
             new Thread(() -> {
                 System.out.println("start capture-----------" + Thread.currentThread().getName());
-                new CaptureCamera().startCapture();
+//                new CaptureCamera().startCapture();
             }).start();
         });
         IMSdk.getInstance().setImOnReceive(new IMOnReceive() {

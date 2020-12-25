@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 
 public class PkgManager {
 
-    public final static int MAX_ALIVE = 30;//缓存30秒
+    public final static int MAX_ALIVE = 10;//缓存30秒
     //pkgid+cpkgn,单个pkginfo包
     private Map<String, AssemblePkg> pkgMap = new ConcurrentHashMap();
     private CopyOnWriteArrayList<WaitForFinish> waitfininsh = new CopyOnWriteArrayList<>();
@@ -85,7 +85,7 @@ public class PkgManager {
                                 }
 
                                 checkWholePkgCnt();
-                                TimeUnit.MILLISECONDS.sleep(20);
+                                TimeUnit.MILLISECONDS.sleep(100);
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -111,6 +111,14 @@ public class PkgManager {
      * @param id
      * @return
      */
+    public synchronized boolean quickJudgeAssemblePkg(String id) {
+        AssemblePkg assemblePkg = pkgMap.get(id);
+        if (assemblePkg == null) {
+            return false;
+        }
+        return assemblePkg.quickJudgeAssemble();
+    }
+
     public synchronized boolean assemblePkg(String id) {
         AssemblePkg assemblePkg = pkgMap.get(id);
         if (assemblePkg == null) {

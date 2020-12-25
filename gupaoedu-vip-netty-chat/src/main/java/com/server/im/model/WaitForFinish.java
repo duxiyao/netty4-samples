@@ -31,7 +31,7 @@ public class WaitForFinish {
 
     public boolean send() {
         cnt++;
-        if(cnt>=10){
+        if(cnt>=2){
             return false;
         }
         boolean flag = false;
