@@ -44,8 +44,10 @@ extern "C"
 #define FPS "30"
 //#define V_WIDTH 1280
 //#define V_HEIGTH 720
-#define V_WIDTH 1920
-#define V_HEIGTH 1080
+//#define V_WIDTH 1920
+//#define V_HEIGTH 1080
+#define V_WIDTH 2880
+#define V_HEIGTH 1800
 #define V_WH "1280x720"
 //#define V_WIDTH 2880
 //#define V_HEIGTH 1800
@@ -247,7 +249,8 @@ static int mac_open_input(AVFormatContext * pFormatCtx){
     //[video]:[audio]
 //    if(avformat_open_input(&pFormatCtx,"FaceTime HD Camera",ifmt, &options)!=0){
 //    if(avformat_open_input(&pFormatCtx,"0",ifmt, &options)!=0){
-    if(avformat_open_input(&pFormatCtx,"Capture screen 1",ifmt, &options)!=0){
+//    if(avformat_open_input(&pFormatCtx,"Capture screen 1",ifmt, &options)!=0){
+    if(avformat_open_input(&pFormatCtx,"Capture screen 0",ifmt, &options)!=0){
         printf("Couldn't open input stream.\n");
         return -1;
     }
@@ -385,7 +388,7 @@ static int open_encode(AVCodec *pCodec,AVCodecContext * &pCodecCtx,AVCodecContex
      * then gop_size is ignored and the output of encoder
      * will always be I frame irrespective to gop_size
      */
-    pCodecCtx->gop_size = 30;
+    pCodecCtx->gop_size = 15;
     pCodecCtx->max_b_frames = 0;
     pCodecCtx->bit_rate=800000;
 //    printf("pCodecCtx->gop_size:%d pCodecCtx->max_b_frames:%d.\n",pCodecCtx->gop_size,pCodecCtx->max_b_frames);

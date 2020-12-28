@@ -63,9 +63,9 @@ public class CaptureCamera {
 //            }
 //        }
 
-//        executorService.execute(() -> {
-//            IMSdk.getInstance().getChat().sendVideo(toUid, data);
-//        });
+        executorService.execute(() -> {
+            IMSdk.getInstance().getChat().sendVideo(toUid, data);
+        });
     }
 
     public static void main(String[] args) {
@@ -85,7 +85,7 @@ public class CaptureCamera {
             IMSdk.getInstance().getChat().sendTransparentTxt(toUid, json);
             new Thread(() -> {
                 System.out.println("start capture-----------" + Thread.currentThread().getName());
-//                new CaptureCamera().startCapture();
+                new CaptureCamera().startCapture();
             }).start();
         });
         IMSdk.getInstance().setImOnReceive(new IMOnReceive() {
