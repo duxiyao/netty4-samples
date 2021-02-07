@@ -396,8 +396,8 @@ static int open_encode(AVCodec *pCodec,AVCodecContext * &pCodecCtx,AVCodecContex
     if (pCodec->id == AV_CODEC_ID_H264){
         //硬编时候感觉这个参数不起作用
         //https://www.jianshu.com/p/b46a33dd958d  刚开始preset是slow，导致播放跟快进似的
-//        av_opt_set(pCodecCtx->priv_data, "preset", "ultrafast", 0);
-        av_opt_set(pCodecCtx->priv_data, "preset", "slow", 0);
+        av_opt_set(pCodecCtx->priv_data, "preset", "ultrafast", 0);
+//        av_opt_set(pCodecCtx->priv_data, "preset", "slow", 0);
         av_opt_set(pCodecCtx->priv_data, "tune", "zerolatency", 0);
     }
     if(pCodec->id == AV_CODEC_ID_H265){

@@ -22,6 +22,8 @@ datalen，2字节数据长度，不包含之前的不包含自身，包含之后
 data,剩余字节流数据，若是媒体数据，需要由时间戳表示媒体包的顺序.timestamp为long的时间戳
 jsonlen, 2字节json长度 json数据 字节流数据
 
+后续可将json换成protobuf
+
 ~~、[from(1B)][fromid][to(1B)][toid][type(1B)][version(1B)]~~
 ~~[pkgidlen(1B)][pkgid(utf-8)][pkgcnt(1B)][cpkgn(1B)]~~
 ~~[datalen(2B)][data]{data中结构[timestamp8B][jsonlen(2B)][json(utf-8)][字节流]}~~
