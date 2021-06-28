@@ -64,7 +64,7 @@ public class UdpServer {
     }
 
     public static void main(String[] args) throws Exception {
-        int port = 8888;
+        int port = 60000;
         if (args != null && args.length > 0) {
             port = Integer.valueOf(args[0]);
         }

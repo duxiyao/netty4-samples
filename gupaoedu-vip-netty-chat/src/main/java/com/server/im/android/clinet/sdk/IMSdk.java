@@ -33,8 +33,10 @@ public class IMSdk {
     }
 
     private String uid;
-    private String serverIp = "172.16.0.16";
-    private int serverPort = 8888;
+//    private String serverIp = "127.0.0.1";
+//    private String serverIp = "47.94.102.169";
+    private String serverIp = "server.dancecode.cn";
+    private int serverPort = 60000;
     private IMLogin imLogin;
     private IMChat imChat;
     PkgManager pkgManager;

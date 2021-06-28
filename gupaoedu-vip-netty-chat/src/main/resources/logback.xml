@@ -29,9 +29,9 @@
 
     <appender name="DefaultFileAppender"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>./logs/rocketmq_mysql.log</file>
+        <file>./logs/loginfo.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <fileNamePattern>./logs/rocketmq_mysql.%i.log
+            <fileNamePattern>./logs/loginfo.%i.log
             </fileNamePattern>
             <minIndex>1</minIndex>
             <maxIndex>10</maxIndex>
@@ -48,16 +48,16 @@
 
     <appender name="PositionAppender"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>./logs/position.log</file>
+        <file>./logs/logerror.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <fileNamePattern>./logs/position.%i.log
+            <fileNamePattern>./logs/logerror.%i.log
             </fileNamePattern>
             <minIndex>1</minIndex>
             <maxIndex>10</maxIndex>
         </rollingPolicy>
         <triggeringPolicy
             class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-            <maxFileSize>10MB</maxFileSize>
+            <maxFileSize>50MB</maxFileSize>
         </triggeringPolicy>
         <encoder>
             <pattern>%d{yyy-MM-dd HH:mm:ss,GMT+8} - %m%n</pattern>
@@ -72,7 +72,7 @@
     </root>
 
     <logger name="PositionLogger" additivity="false">
-        <level value="INFO"/>
+        <level value="ERROR"/>
         <appender-ref ref="PositionAppender"/>
     </logger>
 
