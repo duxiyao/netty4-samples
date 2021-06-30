@@ -49,7 +49,7 @@ public class PkgInfo {
     }
 
     public void setTo(String to) {
-        this.to = to;
+        this.to = autoComplete(to);
     }
 
     public String getFrom() {
@@ -57,7 +57,20 @@ public class PkgInfo {
     }
 
     public void setFrom(String from) {
-        this.from = from;
+        this.from = autoComplete(from);
+    }
+
+    private String autoComplete(String id) {
+//        id != null
+        String c = "-";
+        StringBuilder ret = new StringBuilder(id);
+        if (id.length() < IMEncoder.ID_LEN) {
+            int len = IMEncoder.ID_LEN - id.length();
+            for (int i = 0; i < len; i++) {
+                ret.append(c);
+            }
+        }
+        return ret.toString();
     }
 
     public Byte getType() {
@@ -127,8 +140,8 @@ public class PkgInfo {
         this.serverReceTime = serverReceTime;
     }
 
-    public ByteBuf getBase(ByteBuf byteBuffer,byte total, byte cur, short datalen) {
-        if(byteBuffer==null) {
+    public ByteBuf getBase(ByteBuf byteBuffer, byte total, byte cur, short datalen) {
+        if (byteBuffer == null) {
             byteBuffer = Unpooled.buffer(baseLength() + datalen);
         }
 //        ByteBuffer byteBuffer = ByteBuffer.allocate(baseLength()+datalen);
@@ -189,12 +202,12 @@ public class PkgInfo {
 //                Objects.equals(getcPkgn(), pkgInfo.getcPkgn());
         return
                 Objects.equals(getPkgId(), pkgInfo.getPkgId()) &&
-                Objects.equals(getcPkgn(), pkgInfo.getcPkgn());
+                        Objects.equals(getcPkgn(), pkgInfo.getcPkgn());
     }
 
     @Override
     public int hashCode() {
 //        return Objects.hash(getFrom(), getTo(), getType(), getVersion(), getPkgId(), getPkgCnt(), getcPkgn());
-        return Objects.hash( getPkgId(),getcPkgn());
+        return Objects.hash(getPkgId(), getcPkgn());
     }
 }
