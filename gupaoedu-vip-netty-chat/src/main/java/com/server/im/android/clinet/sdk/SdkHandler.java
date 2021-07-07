@@ -116,8 +116,6 @@ public class SdkHandler extends
                     // : 2020/9/21  组装成功 回应
                     responsePkgAssembled(ctx, pkgInfo, inetSocketAddress);
                 }
-                //自己给自己发送的话，及时清理内存缓存数据。别人发的此行对应的map无命中
-                pkgManager.remove(pkgid);
                 break;
             case PkgInfo.TYPE_TRANSFER_TXT:
             case PkgInfo.TYPE_TRANSFER_TRANSPARENT_TXT:
