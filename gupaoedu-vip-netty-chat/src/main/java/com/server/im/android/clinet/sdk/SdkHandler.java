@@ -72,6 +72,7 @@ public class SdkHandler extends
                 break;
             case PkgInfo.TYPE_PKG_RECEIVE_FINISH:
                 pkgManager.removeWaitForFinish(new WaitForFinish(null, ctx, pkgInfo));
+                //注释掉，可以自己接收自己的消息
 //                pkgManager.remove(pkgInfo.getPkgId());
                 pkgManager.removeWholePkg(pkgInfo.getPkgId());
                 break;
