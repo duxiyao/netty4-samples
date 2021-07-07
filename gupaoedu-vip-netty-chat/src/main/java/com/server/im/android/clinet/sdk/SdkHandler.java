@@ -72,7 +72,7 @@ public class SdkHandler extends
                 break;
             case PkgInfo.TYPE_PKG_RECEIVE_FINISH:
                 pkgManager.removeWaitForFinish(new WaitForFinish(null, ctx, pkgInfo));
-                pkgManager.remove(pkgInfo.getPkgId());
+//                pkgManager.remove(pkgInfo.getPkgId());
                 pkgManager.removeWholePkg(pkgInfo.getPkgId());
                 break;
             case PkgInfo.TYPE_PKG_REMOVED:

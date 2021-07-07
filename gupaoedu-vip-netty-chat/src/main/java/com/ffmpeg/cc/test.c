@@ -1,9 +1,14 @@
 /**
+mac
 gcc test.c -o test.out -framework Cocoa
+
+windows
+g++ test.c -o test.out
+g++ test.c -o test.exe
 */
 
 #include <stdio.h>
-#include<iostream>
+#include <iostream>
 using namespace std;
 static void test0(int *p){
     printf("test0:%d.\n",*p);
