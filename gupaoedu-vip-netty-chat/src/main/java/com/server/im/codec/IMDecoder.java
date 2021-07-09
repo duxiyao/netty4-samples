@@ -91,7 +91,7 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
                     }
                 }
                 if (addflag) {
-                    WaitForFinish temp=new WaitForFinish(null, ctx, pkgInfo);
+                    WaitForFinish temp = new WaitForFinish(null, ctx, pkgInfo);
                     pkgManager.addWaitForFinish(temp);
                     temp.send();
                 }
@@ -113,6 +113,7 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
                 if (toAddr != null) {
                     if (pkgManager.assemblePkg(pkgInfo.getPkgId())) {
                         log.info(pkgInfo.getPkgId() + " 组装成功");
+                        pkgInfo.setServerReceTime(System.currentTimeMillis());
                         // : 2020/9/21  组装成功 回应
                         responsePkgAssembled(ctx, pkgInfo, inetSocketAddress);
                         //转发
@@ -198,8 +199,9 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
         transferTo(ctx, pkgInfo, inetSocketAddress);
     }
 
-    long time,timeSecond;
-    StreamNum streamNum=new StreamNum();
+    long time, timeSecond;
+    StreamNum streamNum = new StreamNum();
+
     private void responsePkgAssembled(ChannelHandlerContext ctx, PkgInfo pkgInfo, InetSocketAddress inetSocketAddress) {
         log.info(pkgInfo.getPkgId() + " 回应：" + inetSocketAddress.toString());
         pkgInfo.setType(PkgInfo.TYPE_PKG_RECEIVE_FINISH);
