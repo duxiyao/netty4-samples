@@ -6,4 +6,6 @@ public interface IMChat {
     void sendAudio(String toId, byte[] data);
     void send(String toId, String msg);
     void sendTransparentTxt(String toId, String msg);
+    void setMute(boolean flag);
+    boolean isMute();
 }

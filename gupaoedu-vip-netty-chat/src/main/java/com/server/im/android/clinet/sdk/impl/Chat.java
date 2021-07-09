@@ -22,19 +22,20 @@ public class Chat implements IMChat {
     private PkgManager pkgManager;
     private InetSocketAddress server;
     private String uid;
+    private volatile boolean isMute = false;
 
     public Chat(Channel channel, PkgManager pkgManager, InetSocketAddress server) {
         this.channel = channel;
-        this.pkgManager=pkgManager;
-        this.server=server;
-        uid= IMSdk.getInstance().getUid();
+        this.pkgManager = pkgManager;
+        this.server = server;
+        uid = IMSdk.getInstance().getUid();
     }
 
     @Override
     public void send(String toId, byte[] data) {
         if (channel == null)
             return;
-        PkgInfo pkgInfo = MessageUtil.buildBytes(uid,toId, data);
+        PkgInfo pkgInfo = MessageUtil.buildBytes(uid, toId, data);
         List<ByteBuf> datas = IMEncoder.encode(channel, pkgInfo);
         pkgManager.addWholePkg(new WholePkg(datas, pkgInfo));
         for (ByteBuf byteBuf : datas) {
@@ -48,7 +49,7 @@ public class Chat implements IMChat {
     public void sendVideo(String toId, byte[] data) {
         if (channel == null)
             return;
-        PkgInfo pkgInfo = MessageUtil.buildBytes(uid,toId, data);
+        PkgInfo pkgInfo = MessageUtil.buildBytes(uid, toId, data);
         pkgInfo.setType(PkgInfo.TYPE_TRANSFER_VIDEO);
         List<ByteBuf> datas = IMEncoder.encode(channel, pkgInfo);
         pkgManager.addWholePkg(new WholePkg(datas, pkgInfo));
@@ -61,9 +62,9 @@ public class Chat implements IMChat {
 
     @Override
     public void sendAudio(String toId, byte[] data) {
-        if (channel == null)
+        if (channel == null || isMute)
             return;
-        PkgInfo pkgInfo = MessageUtil.buildBytes(uid,toId, data);
+        PkgInfo pkgInfo = MessageUtil.buildBytes(uid, toId, data);
         pkgInfo.setType(PkgInfo.TYPE_TRANSFER_AUDIO);
         List<ByteBuf> datas = IMEncoder.encode(channel, pkgInfo);
         pkgManager.addWholePkg(new WholePkg(datas, pkgInfo));
@@ -78,7 +79,7 @@ public class Chat implements IMChat {
     public void send(String toId, String msg) {
         if (channel == null)
             return;
-        PkgInfo pkgInfo = MessageUtil.buildMsg(uid,toId, msg);
+        PkgInfo pkgInfo = MessageUtil.buildMsg(uid, toId, msg);
         List<ByteBuf> datas = IMEncoder.encode(channel, pkgInfo);
         pkgManager.addWholePkg(new WholePkg(datas, pkgInfo));
         for (ByteBuf byteBuf : datas) {
@@ -92,7 +93,7 @@ public class Chat implements IMChat {
     public void sendTransparentTxt(String toId, String msg) {
         if (channel == null)
             return;
-        PkgInfo pkgInfo = MessageUtil.buildMsg(uid,toId, msg);
+        PkgInfo pkgInfo = MessageUtil.buildMsg(uid, toId, msg);
         pkgInfo.setType(PkgInfo.TYPE_TRANSFER_TRANSPARENT_TXT);
         List<ByteBuf> datas = IMEncoder.encode(channel, pkgInfo);
         pkgManager.addWholePkg(new WholePkg(datas, pkgInfo));
@@ -101,5 +102,15 @@ public class Chat implements IMChat {
         }
         pkgManager.addWaitForFinish(new WaitForFinish(server, channel.pipeline().lastContext(), pkgInfo));
         channel.flush();
+    }
+
+    @Override
+    public void setMute(boolean flag) {
+        isMute = flag;
+    }
+
+    @Override
+    public boolean isMute() {
+        return isMute;
     }
 }
