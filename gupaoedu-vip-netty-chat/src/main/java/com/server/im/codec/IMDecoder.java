@@ -113,7 +113,7 @@ public class IMDecoder extends SimpleChannelInboundHandler<DatagramPacket> {
                 if (toAddr != null) {
                     if (pkgManager.assemblePkg(pkgInfo.getPkgId())) {
                         log.info(pkgInfo.getPkgId() + " 组装成功");
-                        pkgInfo.setServerReceTime(System.currentTimeMillis());
+//                        pkgInfo.setServerReceTime(System.currentTimeMillis());  无用
                         // : 2020/9/21  组装成功 回应
                         responsePkgAssembled(ctx, pkgInfo, inetSocketAddress);
                         //转发

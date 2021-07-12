@@ -31,10 +31,10 @@ public class WaitForFinish {
     }
 
     public boolean send() {
-        cnt++;
         if(cnt>=2){
             return false;
         }
+        cnt++;
         boolean flag = false;
         if (to == null || ctx == null || pkgInfo == null) {
             return flag;
