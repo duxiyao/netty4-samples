@@ -38,8 +38,15 @@ public class WholePkg {
         return System.currentTimeMillis()-initTime;
     }
 
-//    public void release() {
-//        try {
+    public void release() {
+        try {
+            for (ByteBuf buf : byteBufs) {
+                try {
+                    buf.release(buf.refCnt());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
 //            byteBufs.parallelStream().forEach(o -> {
 //                try {
 //                    if (o.refCnt() > 0) {
@@ -50,8 +57,8 @@ public class WholePkg {
 //                    e.printStackTrace();
 //                }
 //            });
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

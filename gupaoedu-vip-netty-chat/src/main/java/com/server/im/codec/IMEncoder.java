@@ -21,6 +21,8 @@ public class IMEncoder {
     public static final String CODE = "utf-8";
     public static final Charset CODESET = CharsetUtil.UTF_8;
     public static final int MAX_LEN = 1472;
+    //有n次重传的机会
+    private static final int TIMES=5;
 
     /**
      * 将pkgInfo所有数据，按照MAX_LEN进行编码分包
@@ -67,6 +69,7 @@ public class IMEncoder {
             byte[] tmp = new byte[dlen];
             bdata.readBytes(tmp);
             buffer.writeBytes(tmp);
+            buffer.retain(TIMES);
             ret.add(buffer);
         }
         bdata.release();

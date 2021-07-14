@@ -80,7 +80,7 @@ public class PkgManager {
                             }
                         }
 
-                        if(stateManager!=null){
+                        if (stateManager != null) {
                             stateManager.checkTimeout(cur);
                         }
                         checkPkgTime = System.currentTimeMillis();
@@ -255,14 +255,19 @@ public class PkgManager {
 //        if (wholePkg != null) {
 //            wholePkg.release();
 //        }
-        wholePkgMap.remove(pkgId);
+        WholePkg v = wholePkgMap.remove(pkgId);
+        if (v != null)
+        v.release();
 //        System.out.println( "---map.size="+wholePkgMap.size());
     }
 
-    private void checkWholePkgCnt(){
-        if(wholePkgMap.size()>100){
+    private void checkWholePkgCnt() {
+        if (wholePkgMap.size() > 100) {
+            for (WholePkg v : wholePkgMap.values()) {
+                v.release();
+            }
             wholePkgMap.clear();
-            System.out.println( "---clear--"+wholePkgMap.size());
+            System.out.println("---clear--" + wholePkgMap.size());
         }
     }
 }

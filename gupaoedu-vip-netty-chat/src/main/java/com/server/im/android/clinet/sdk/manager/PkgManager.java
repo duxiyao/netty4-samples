@@ -256,7 +256,9 @@ public class PkgManager {
 ////            wholePkg.release();
 //            System.out.println("send pkg stl is :" + wholePkg.getDelta());
 //        }
-        wholePkgMap.remove(pkgId);
+        WholePkg v = wholePkgMap.remove(pkgId);
+        if (v != null)
+            v.release();
         if (wholePkgMap.size() > 20) {
             System.out.println("---map.size=" + wholePkgMap.size());
         }
@@ -264,6 +266,9 @@ public class PkgManager {
 
     private void checkWholePkgCnt() {
         if (wholePkgMap.size() > 10) {
+            for (WholePkg v : wholePkgMap.values()) {
+                v.release();
+            }
             wholePkgMap.clear();
         }
     }

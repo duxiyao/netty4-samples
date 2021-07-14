@@ -11,6 +11,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public class TestClient2 {
@@ -28,7 +30,7 @@ public class TestClient2 {
 
     private static volatile boolean flag = true;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
 //region test
 //        byte[] ds=new byte[10];
 //        Short sht=Short.MAX_VALUE;
@@ -78,8 +80,21 @@ public class TestClient2 {
 //
 //        ByteBuffer inp = ByteBuffer.allocate(2);
 //        inp.put(a, 1, 1);
+
+
+//        byte[] b = new byte[]{1, 2};
+//        byte[] a = new byte[9];
+//        ByteBuffer buffer = ByteBuffer.wrap(a);
+//        buffer.position(7);
+//        buffer.put(b, 0, b.length);
 //        String s = "";
 //
+//        LinkedBlockingDeque q = new LinkedBlockingDeque();
+//        q.offer(1);
+//        q.offer(2);
+//        q.offer(3);
+//        System.out.println(q.poll());
+//        System.out.println(q.take());
 //        if (true) return;
 //endregion
 
@@ -144,7 +159,7 @@ public class TestClient2 {
         });
 
         IMSdk.getInstance().init(toUid, null, () -> {
-            IMSdk.getInstance().getChat().send(uid, "哈哈");
+//            IMSdk.getInstance().getChat().send(uid, "哈哈");
         });
 
         System.out.println("TestClient2");
