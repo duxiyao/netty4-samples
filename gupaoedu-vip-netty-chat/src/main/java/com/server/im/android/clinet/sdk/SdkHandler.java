@@ -118,6 +118,7 @@ public class SdkHandler extends
                 }
                 break;
             case PkgInfo.TYPE_TRANSFER_TXT:
+            case PkgInfo.TYPE_TRANSFER_BYTE:
             case PkgInfo.TYPE_TRANSFER_TRANSPARENT_TXT:
             case PkgInfo.TYPE_TRANSFER_VIDEO:
             case PkgInfo.TYPE_TRANSFER_AUDIO:

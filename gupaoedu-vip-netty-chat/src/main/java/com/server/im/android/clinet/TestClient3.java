@@ -5,12 +5,11 @@ import com.server.im.android.clinet.sdk.IMSdk;
 import com.server.im.android.clinet.sdk.codec.IMEncoder;
 import com.server.im.android.clinet.sdk.model.PkgInfo;
 
-import java.nio.charset.StandardCharsets;
+public class TestClient3 {
 
-public class TestClient1 {
     public static void main(String[] args) {
 //        String uid = "4c69bacb-cd0c-4ea9-ab02-17ba6816f6c8", toUid = "4c69bacb-cd0c-4ea9-ab02-17ba6816f6c9";
-        String uid = "001", toUid = "002";
+        String uid = "002", toUid = "001";
         IMSdk.getInstance().init(uid, null, () -> {
             StringBuilder sb = new StringBuilder();
             int i = 0;

@@ -54,7 +54,7 @@ public class MessageUtil {
         MessageUtil messageUtil=builder();
         messageUtil.setFrom(uid);
         messageUtil.setTo(to);
-        messageUtil.setType(PkgInfo.TYPE_TRANSFER_TXT);
+        messageUtil.setType(PkgInfo.TYPE_TRANSFER_BYTE);
         messageUtil.setData(msg);
         return messageUtil.build();
     }

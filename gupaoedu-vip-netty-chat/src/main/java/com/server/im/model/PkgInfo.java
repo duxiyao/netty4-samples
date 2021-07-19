@@ -25,6 +25,7 @@ public class PkgInfo {
     public final static byte TYPE_PKG_RECEIVE_FINISH = 3;
     public final static byte TYPE_PKG_REMOVED = 4;
     public final static byte TYPE_HEART_BEAT = 5;
+    public final static byte TYPE_TRANSFER_BYTE = 10;
     public final static byte TYPE_TRANSFER_TXT = 11;
     public final static byte TYPE_TRANSFER_TRANSPARENT_TXT = 12;//透传
     public final static byte TYPE_TRANSFER_VIDEO = 13;//
